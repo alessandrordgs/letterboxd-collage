@@ -24,7 +24,7 @@ export default function RootLayout({
       className={`${roboto.variable}  antialiased`}
       lang="pt-br">
       <body
-        className={`${roboto.variable}  antialiased`}
+        className={`${roboto.variable}antialiased`}
       >
         {children}
       </body>

@@ -1,11 +1,12 @@
+import { Imovies } from '@/interfaces/IMovies';
 import { JSDOM } from 'jsdom'
-type films = {
-  name: string | null | undefined;
-  img: string | null | undefined
-}[]
-export async function GET(_request: Request, { params }: { params: { username: string } }) {
+import { NextRequest } from 'next/server';
+
+export async function GET(request: NextRequest, { params }: { params: { username: string } }) {
 
   const { username } = await params;
+  const period = request?.nextUrl?.searchParams.get('period')
+  console.log(period)
   const url = `https://letterboxd.com/${username}/films/diary/for/2025/04`;
   const response = await fetch(url, {
     method: 'GET',
@@ -22,7 +23,7 @@ export async function GET(_request: Request, { params }: { params: { username: s
   const dom = new JSDOM(data)
   const table = dom.window.document.querySelector('table')
   const rows = table?.querySelectorAll('.diary-entry-row')
-  const films: films = []
+  const films: Imovies[] = []
 
   for (const row of rows ?? []) {
     const details = row.querySelector('.td-film-details');
