@@ -44,7 +44,7 @@ export async function GET(request: NextRequest, { params }: { params: { username
 
     films.push({
       name,
-      img: data.image
+      img: `/api/letterboxd/proxy-image?url=${encodeURIComponent(data.image)}`
     });
   }
 
