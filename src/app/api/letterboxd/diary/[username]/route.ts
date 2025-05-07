@@ -125,5 +125,11 @@ export async function GET(
     })
   }
 
-  return Response.json(films, { status: 200 })
+  return Response.json(films, {
+    status: 200,
+    headers: {
+      "Content-Type": "application/json",
+      "Content-Length": Buffer.byteLength(JSON.stringify(films)).toString(),
+    },
+  })
 }
