@@ -148,21 +148,23 @@ export default function Home() {
     setFinalImage('')
   }
   return (
-    <div className="flex max-w-3xl h-svh flex-col mx-auto items-center justify-center py-6">
+    <div className="flex max-w-3xl h-svh flex-col mx-auto items-center justify-center p-6">
       <div className="flex flex-col justify-center items-center ">
-        <NextImage className="mb-4" src="https://a.ltrbxd.com/logos/letterboxd-decal-dots-pos-rgb-500px.png" alt="letterboxd logo" width={150} height={50} />
+        <div className="relative w-[8rem] h-[8rem] mb-4">
+          <NextImage className="mb-4 h-full w-full" objectFit="cover" fill src="https://a.ltrbxd.com/logos/letterboxd-decal-dots-pos-rgb-500px.png" alt="letterboxd logo" />
+        </div>
         <h1 className="text-center md:text-5xl sm:text-2xl font-bold">Letterboxd collage</h1>
         <p className="text-center font-light  my-3 md:text-2xl  sm:text-1xl">Make a collage of your Letterboxd movies each month</p>
       </div>
       <div>
-        {movies.length === 0 && !isLoading ? <Card className="md:w-[30rem] w-[25rem] md:h-[20rem] h-[15rem] flex items-center justify-center">
+        {movies.length === 0 && !isLoading ? <Card className="md:w-[30rem] w-[15rem] md:h-[20rem] h-[15rem] flex items-center justify-center">
           <CardContent>
 
             <div className="grid w-full max-w-sm items-center gap-1.5">
               <Label className="md:text-xl" htmlFor="email">Username</Label>
-              <Input className="w-[20rem] p-4 py-6 mb-2 md:text-3xl" onChange={(e) => setUsername(e.target.value)} type="text" id="username" placeholder="alessandrordgs" />
+              <Input className="md:w-[20rem] w-[10rem] p-4 md:py-6 mb-2 md:text-1xl" onChange={(e) => setUsername(e.target.value)} type="text" id="username" placeholder="alessandrordgs" />
               <Select onValueChange={(value) => setPeriod(parseInt(value))}>
-                <SelectTrigger className="w-[20rem] ">
+                <SelectTrigger className="md:w-[20rem] w-[10rem] p-4 md:py-6 md:text-1xl ">
                   <SelectValue placeholder="Period" />
                 </SelectTrigger>
                 <SelectContent>
@@ -173,7 +175,7 @@ export default function Home() {
               </Select>
             </div>
 
-            <Button className="w-[20rem] cursor-pointer mt-3" onClick={getDiary}>Generate</Button>
+            <Button className="md:w-[20rem] w-[10rem] cursor-pointer mt-3" onClick={getDiary}>Generate</Button>
           </CardContent>
         </Card> : <div className="flex flex-col items-center justify-center">
           <h2 className="text-center font-light   md:text-2xl  sm:text-1xl">Your collage is ready!</h2>
