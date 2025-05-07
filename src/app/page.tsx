@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectTrigger, SelectValue, SelectItem } from "@/components/ui/select";
 import { Imovies } from "@/interfaces/IMovies";
+import { calculateGridColumns } from "@/lib/utils";
 
 import NextImage from "next/image";
 import { useEffect, useRef, useState } from "react";
@@ -33,37 +34,81 @@ export default function Home() {
     if (!canvas) return;
 
     const ctx = canvas.getContext("2d");
-    const imageSize = 100; // Width & height per image
-    const columns = 4;
-    const rows = Math.ceil(movies.length / columns);
-
-    canvas.width = columns * imageSize;
-    canvas.height = rows * imageSize;
+    const columns = calculateGridColumns(movies);
+    const padding = 0; // Se quiser espaço entre imagens
 
     Promise.all(
       movies.map((movie) => {
         return new Promise<HTMLImageElement>((resolve) => {
           const img = new Image();
-          // img.crossOrigin = "anonymous"; // Prevent CORS issues
           img.src = movie.img as string;
           img.onload = () => resolve(img);
         });
       })
     ).then((images) => {
-      console.log(images)
-      images.forEach((img, index) => {
-        const x = (index % columns) * imageSize;
-        const y = Math.floor(index / columns) * imageSize;
-        ctx?.drawImage(img, x, y, imageSize, imageSize);
+      const imageWidths: number[] = [];
+      const rowHeights: number[] = [];
+
+      let currentRow = 0;
+      let currentCol = 0;
+      let maxRowHeight = 0;
+
+      images.forEach((img, i) => {
+        if (!imageWidths[currentCol] || img.width > imageWidths[currentCol]) {
+          imageWidths[currentCol] = img.width;
+        }
+
+        if (img.height > maxRowHeight) {
+          maxRowHeight = img.height;
+        }
+
+        currentCol++;
+        if (currentCol === columns || i === images.length - 1) {
+          rowHeights[currentRow] = maxRowHeight;
+          currentRow++;
+          currentCol = 0;
+          maxRowHeight = 0;
+        }
       });
 
-      // Export canvas to data URL
+     
+      const totalWidth = imageWidths.reduce((sum, w) => sum + w + padding, 0);
+      const totalHeight = rowHeights.reduce((sum, h) => sum + h + padding, 0);
+
+      canvas.width = totalWidth;
+      canvas.height = totalHeight;
+
+      
+      let x = 0;
+      let y = 0;
+      let col = 0;
+      let row = 0;
+
+      images.forEach((img) => {
+        ctx?.drawImage(img, x, y, img.width, img.height);
+
+        x += imageWidths[col] + padding;
+        col++;
+
+        if (col === columns) {
+          col = 0;
+          x = 0;
+          y += rowHeights[row] + padding;
+          row++;
+        }
+      });
+
       const dataUrl = canvas.toDataURL("image/png");
       setFinalImage(dataUrl);
     });
   }, [movies]);
 
-  console.log(finalImage)
+  function reset() {
+    setUsername('')
+    setPeriod(1)
+    setMovies([])
+    setFinalImage('')
+  }
   return (
     <div className="flex max-w-3xl h-svh flex-col mx-auto items-center justify-center py-6">
       <div className="flex flex-col justify-center items-center ">
@@ -92,22 +137,11 @@ export default function Home() {
 
             <Button className="w-[20rem] cursor-pointer mt-3" onClick={getDiary}>Generate</Button>
           </CardContent>
-        </Card> : <Button>
+        </Card> : <Button onClick={reset}>
           Regerate
         </Button>}
 
-        {/* {isLoading ? 'carregando' : (
-          <div className="grid grid-cols-1 mt-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            {movies.map((item) => {
-              return (
-                <div key={item.name} className="flex flex-col items-center">
-                  <Image src={item.img as string} alt={item.name as string} height={100} width={100} />
-                </div>
-              )
-            })}
-          </div>
-        )} */}
-        {isLoading ? 'carregando'  : ''}
+        {isLoading ? 'carregando' : ''}
         <div className="mt-4">
           <canvas ref={canvasRef} style={{ display: "none" }} />
           {finalImage ? (
