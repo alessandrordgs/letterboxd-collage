@@ -107,6 +107,7 @@ export default function Home() {
             })}
           </div>
         )} */}
+        {isLoading ? 'carregando'  : ''}
         <div className="mt-4">
           <canvas ref={canvasRef} style={{ display: "none" }} />
           {finalImage ? (
