@@ -4,7 +4,7 @@ import { NextRequest } from 'next/server';
 
 export async function GET(request: NextRequest, { params }: { params: { username: string } }) {
 
-  const { username } = await params;
+  const { username } = params;
   const period = request?.nextUrl?.searchParams.get('period')
   console.log(period)
   const url = `https://letterboxd.com/${username}/films/diary/for/2025/04`;
