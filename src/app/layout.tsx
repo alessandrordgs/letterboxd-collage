@@ -34,6 +34,7 @@ export const metadata: Metadata = {
     description: "Transform your Letterboxd viewing history into stunning visual collages! Create and share beautiful movie poster grids showcasing films you've watched in the past month, quarter, or year. The perfect way to visualize and celebrate your cinematic journey!",
     url: "https://collage-diary.vercel.app/",
     siteName: "Collage diary | Letterboxd",
+
     images: [
       {
         url: "https://a.ltrbxd.com/logos/letterboxd-logo-v-neg-rgb-1000px.png",
@@ -51,9 +52,12 @@ export default function RootLayout({
   return (
     <html
       className={`${roboto.variable}  antialiased`}
-      lang="pt-br">
+      lang="pt-br"
+      prefix="og: http://ogp.me/ns#"
+      >
       <body
         className={`${roboto.variable}antialiased`}
+
       >
         {children}
       </body>
