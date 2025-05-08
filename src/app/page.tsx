@@ -34,7 +34,6 @@ export default function Home() {
     let currentProgressValue = 0;
     timerRef.current = setInterval(() => {
       if (currentProgressValue < 90) {
-        // Ajustar a velocidade do progresso com base no período selecionado
         const incrementFactor = period === 12 ? 0.5 : period === 3 ? 1 : 2;
         currentProgressValue = Math.min(90, currentProgressValue + incrementFactor * (100 - currentProgressValue) / 100);
         setProgress(currentProgressValue);
@@ -200,7 +199,6 @@ export default function Home() {
           ) : (
             null
           )}
-
         </div>
       </div>
     </div>
