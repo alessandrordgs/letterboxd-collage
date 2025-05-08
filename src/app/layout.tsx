@@ -11,7 +11,7 @@ const roboto = Roboto({
 
 export const metadata: Metadata = {
   title: "Collage diary | Letterboxd",
-  description: "This web application allows users to create personalized collages from their Letterboxd diary entries. Users can generate visual grids featuring movie posters they've watched over specific time periods (1, 3, or 12 months",
+  description: "Transform your Letterboxd viewing history into stunning visual collages! Create and share beautiful movie poster grids showcasing films you've watched in the past month, quarter, or year. The perfect way to visualize and celebrate your cinematic journey!",
   authors: [
     {
       name: "Alessandro Rodrigues",
@@ -21,23 +21,22 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Collage diary | Letterboxd",
-    description: "This web application allows users to create personalized collages from their Letterboxd diary entries. Users can generate visual grids featuring movie posters they've watched over specific time periods (1, 3, or 12 months",
-    creator: "@alessandrordgs",
+    description: "Transform your Letterboxd viewing history into stunning visual collages! Create and share beautiful movie poster grids showcasing films you've watched in the past month, quarter, or year. The perfect way to visualize and celebrate your cinematic journey!",
     images: [
       {
-        url: "https://a.ltrbxd.com/logos/letterboxd-decal-dots-pos-rgb-500px.png",
+        url: "https://a.ltrbxd.com/logos/letterboxd-logo-v-neg-rgb-1000px.png",
         alt: "Letterboxd logo",
       },
     ],
   },
   openGraph: {
     title: "Collage diary | Letterboxd",
-    description: "This web application allows users to create personalized collages from their Letterboxd diary entries. Users can generate visual grids featuring movie posters they've watched over specific time periods (1, 3, or 12 months",
+    description: "Transform your Letterboxd viewing history into stunning visual collages! Create and share beautiful movie poster grids showcasing films you've watched in the past month, quarter, or year. The perfect way to visualize and celebrate your cinematic journey!",
     url: "https://collage-diary.vercel.app/",
     siteName: "Collage diary | Letterboxd",
     images: [
       {
-        url: "https://a.ltrbxd.com/logos/letterboxd-decal-dots-pos-rgb-500px.png",
+        url: "https://a.ltrbxd.com/logos/letterboxd-logo-v-neg-rgb-1000px.png",
         alt: "Letterboxd logo",
       },
     ],
