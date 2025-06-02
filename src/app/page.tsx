@@ -8,8 +8,10 @@ import { Select, SelectContent, SelectTrigger, SelectValue, SelectItem } from "@
 import { Imovies } from "@/interfaces/IMovies";
 import { calculateGridColumns } from "@/lib/utils";
 import axios from "axios";
+import { signIn, signOut, useSession } from "next-auth/react";
 
 import NextImage from "next/image";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 export default function Home() {
@@ -21,6 +23,9 @@ export default function Home() {
   const [finalImage, setFinalImage] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const [media, setMedia] = useState<File | null>(null)
+  const session = useSession()
+  const router = useRouter()
   async function getDiary() {
     if (!username) return alert('preencha o campo de úsuario')
     setIsLoading(true)
@@ -136,6 +141,12 @@ export default function Home() {
       });
 
       const dataUrl = canvas.toDataURL("image/png");
+
+      canvas.toBlob((blob) => {
+        const file = new File([blob as Blob], "fileName.jpg", { type: "image/jpeg" })
+        setMedia(file)
+      }, 'image/jpeg');
+
       setFinalImage(dataUrl);
     });
   }, [movies]);
@@ -145,6 +156,23 @@ export default function Home() {
     setPeriod(1)
     setMovies([])
     setFinalImage('')
+  }
+
+  console.log('session', session) 
+
+  async function shareTweet() {
+    if (!session.data?.user) {
+      return signIn("twitter")
+    }
+      const formData = new FormData()
+    if (media) formData.append('media', media)
+
+  const response  =  await fetch('/api/twitter/tweet', {
+      method: 'POST',
+      body: formData,
+    })
+  const data = await response.json()
+  router.push(`https://x.com/${session.data.user.username}/status/${data.data.data.id}`)
   }
   return (
     <div className="flex max-w-3xl h-svh flex-col mx-auto items-center justify-center p-6">
@@ -200,6 +228,8 @@ export default function Home() {
             null
           )}
         </div>
+        <button onClick={() => signIn("twitter")}>Entrar com Twitter</button>
+        <Button onClick={shareTweet}> share tweet</Button>
       </div>
     </div>
   );
