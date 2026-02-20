@@ -320,16 +320,6 @@ export default function Home() {
       const oy = Math.round((SH - drawH) / 2);
       sctx.drawImage(img, ox, oy, drawW, drawH);
 
-      if (oy > 24) {
-        const labelSize = Math.max(12, Math.round(SW * 0.022));
-        sctx.font = `500 ${labelSize}px 'Space Grotesk', sans-serif`;
-        sctx.fillStyle = '#89A398';
-        sctx.textAlign = 'center';
-        sctx.textBaseline = 'middle';
-        sctx.letterSpacing = `${Math.round(SW * 0.002)}px`;
-        sctx.fillText('collage.alessandrordgs.com.br', SW / 2, oy + drawH + oy / 2);
-      }
-
       sc.toBlob((blob) => {
         setIsGeneratingStories(false);
         if (!blob) return;
