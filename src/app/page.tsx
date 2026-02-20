@@ -9,10 +9,7 @@ import { Logo } from "@/components/ui/Logo";
 import { Imovies } from "@/interfaces/IMovies";
 import { calculateGridColumns } from "@/lib/utils";
 import axios from "axios";
-import { signIn, useSession } from "next-auth/react";
-
 import NextImage from "next/image";
-import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 export default function Home() {
@@ -24,9 +21,30 @@ export default function Home() {
   const [finalImage, setFinalImage] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const [media, setMedia] = useState<File | null>(null)
-  const session = useSession()
-  const router = useRouter()
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
+
+  useEffect(() => {
+    if (!contextMenu) return;
+    function close() { setContextMenu(null) }
+    function onKey(e: KeyboardEvent) { if (e.key === 'Escape') close() }
+    window.addEventListener('click', close);
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('click', close);
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [contextMenu]);
+
+  async function copyToClipboard() {
+    if (!finalImage) return;
+    try {
+      const blob = await fetch(finalImage).then(r => r.blob());
+      await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
+    } catch {
+      downloadCollage();
+    }
+    setContextMenu(null);
+  }
 
   async function getDiary() {
     if (!username) return alert('preencha o campo de úsuario')
@@ -126,9 +144,54 @@ export default function Home() {
       const totalWidth = imageWidths.reduce((sum, w) => sum + w + padding, 0);
       const totalHeight = rowHeights.reduce((sum, h) => sum + h + padding, 0);
 
-      canvas.width = totalWidth;
-      canvas.height = totalHeight;
+      const HEADER_HEIGHT = Math.round(totalWidth * 0.12);
+      const FOOTER_HEIGHT = Math.round(totalWidth * 0.065);
+      const cx = totalWidth / 2;
 
+      canvas.width = totalWidth;
+      canvas.height = totalHeight + HEADER_HEIGHT + FOOTER_HEIGHT;
+
+      if (!ctx) return;
+
+      // Background
+      ctx.fillStyle = '#14181C';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // --- HEADER ---
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      // Brand label "● LETTERBOXD"
+      const labelSize = Math.max(10, Math.round(totalWidth * 0.018));
+      ctx.font = `500 ${labelSize}px 'Space Grotesk', sans-serif`;
+      ctx.fillStyle = '#00E054';
+      ctx.letterSpacing = `${Math.round(totalWidth * 0.004)}px`;
+      ctx.fillText('● LETTERBOXD', cx, HEADER_HEIGHT * 0.28);
+
+      // Title "THIS IS MY DIARY"
+      const titleSize = Math.max(18, Math.round(totalWidth * 0.055));
+      ctx.font = `700 ${titleSize}px 'Space Grotesk', sans-serif`;
+      ctx.fillStyle = '#FFFFFF';
+      ctx.letterSpacing = `${Math.round(totalWidth * 0.002)}px`;
+      ctx.fillText('THIS IS MY DIARY', cx, HEADER_HEIGHT * 0.58);
+
+      // Period subtitle
+      const now = new Date();
+      const periodLabel = period === 1
+        ? now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase()
+        : period === 3
+          ? 'LAST 3 MONTHS'
+          : String(now.getFullYear());
+      const subtitleSize = Math.max(10, Math.round(totalWidth * 0.022));
+      ctx.font = `600 ${subtitleSize}px 'Space Grotesk', sans-serif`;
+      ctx.fillStyle = '#FF8000';
+      ctx.letterSpacing = `${Math.round(totalWidth * 0.003)}px`;
+      ctx.fillText(periodLabel, cx, HEADER_HEIGHT * 0.84);
+
+      // Reset letterSpacing for images
+      ctx.letterSpacing = '0px';
+
+      // --- GRID (offset by HEADER_HEIGHT) ---
       // Center last row when it has fewer images than columns
       const lastRowCount = images.length % columns || columns;
       const lastRowStartIndex = images.length - lastRowCount;
@@ -136,12 +199,12 @@ export default function Home() {
       const lastRowOffset = Math.floor((totalWidth - lastRowWidth) / 2);
 
       let x = lastRowStartIndex === 0 ? lastRowOffset : 0;
-      let y = 0;
+      let y = HEADER_HEIGHT;
       let col = 0;
       let row = 0;
 
       images.forEach((img, i) => {
-        ctx?.drawImage(img, x, y, img.width, img.height);
+        ctx.drawImage(img, x, y, img.width, img.height);
 
         x += imageWidths[col] + padding;
         col++;
@@ -154,16 +217,40 @@ export default function Home() {
         }
       });
 
+      // --- FOOTER ---
+      const footerY = HEADER_HEIGHT + totalHeight;
+
+      // Separator line
+      ctx.strokeStyle = '#2C3440';
+      ctx.lineWidth = Math.max(1, Math.round(totalWidth * 0.002));
+      ctx.beginPath();
+      ctx.moveTo(totalWidth * 0.05, footerY + FOOTER_HEIGHT * 0.22);
+      ctx.lineTo(totalWidth * 0.95, footerY + FOOTER_HEIGHT * 0.22);
+      ctx.stroke();
+
+      // Green accent dots flanking the line
+      const dotR = Math.max(2, Math.round(totalWidth * 0.004));
+      ctx.fillStyle = '#00E054';
+      ctx.beginPath();
+      ctx.arc(totalWidth * 0.05, footerY + FOOTER_HEIGHT * 0.22, dotR, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(totalWidth * 0.95, footerY + FOOTER_HEIGHT * 0.22, dotR, 0, Math.PI * 2);
+      ctx.fill();
+
+      // URL
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const footerSize = Math.max(12, Math.round(totalWidth * 0.026));
+      ctx.font = `500 ${footerSize}px 'Space Grotesk', sans-serif`;
+      ctx.fillStyle = '#89A398';
+      ctx.letterSpacing = `${Math.round(totalWidth * 0.002)}px`;
+      ctx.fillText('collage.alessandrordgs.com.br', cx, footerY + FOOTER_HEIGHT * 0.65);
+
       const dataUrl = canvas.toDataURL("image/png");
-
-      canvas.toBlob((blob) => {
-        const file = new File([blob as Blob], "fileName.jpg", { type: "image/jpeg" })
-        setMedia(file)
-      }, 'image/jpeg');
-
       setFinalImage(dataUrl);
     });
-  }, [movies]);
+  }, [movies, period]);
 
   function reset() {
     setUsername('')
@@ -172,19 +259,12 @@ export default function Home() {
     setFinalImage('')
   }
 
-  async function shareTweet() {
-    if (!session.data?.user) {
-      return signIn("twitter")
-    }
-    const formData = new FormData()
-    if (media) formData.append('media', media)
-
-    const response = await fetch('/api/twitter/tweet', {
-      method: 'POST',
-      body: formData,
-    })
-    const data = await response.json()
-    router.push(`https://x.com/${session.data.user.username}/status/${data.data.data.id}`)
+  function downloadCollage() {
+    if (!finalImage) return
+    const a = document.createElement('a')
+    a.href = finalImage
+    a.download = 'my-letterboxd-diary.png'
+    a.click()
   }
 
   return (
@@ -274,22 +354,51 @@ export default function Home() {
               Your collage is ready
             </p>
 
-            <div className="border border-foreground shadow-[3px_3px_0px_0px_rgba(30,10,60,1)]">
+            <div
+              className="border border-foreground shadow-[3px_3px_0px_0px_rgba(30,10,60,1)] w-full relative"
+              onContextMenu={(e) => {
+                e.preventDefault();
+                setContextMenu({ x: e.clientX, y: e.clientY });
+              }}
+            >
               <NextImage
                 src={finalImage}
                 alt="Movie collage"
                 height={500}
                 width={500}
-                className="block"
+                style={{ width: '100%', height: 'auto' }}
+                className="block select-none"
               />
             </div>
+
+            {contextMenu && (
+              <div
+                className="fixed z-50 min-w-44 border border-foreground bg-card py-1"
+                style={{ top: contextMenu.y, left: contextMenu.x }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <button
+                  className="w-full text-left px-4 py-2.5 text-xs font-bold uppercase tracking-widest text-foreground hover:bg-primary hover:text-primary-foreground transition-colors"
+                  onClick={() => { downloadCollage(); setContextMenu(null); }}
+                >
+                  ↓ Download PNG
+                </button>
+                <div className="h-px bg-border mx-2" />
+                <button
+                  className="w-full text-left px-4 py-2.5 text-xs font-bold uppercase tracking-widest text-foreground hover:bg-primary hover:text-primary-foreground transition-colors"
+                  onClick={copyToClipboard}
+                >
+                  ⎘ Copy to Clipboard
+                </button>
+              </div>
+            )}
 
             <Button
               variant="secondary"
               className="w-full"
-              onClick={shareTweet}
+              onClick={downloadCollage}
             >
-              {session.data?.user ? "Share on X" : "Sign in & Share on X"}
+              Download
             </Button>
 
             <Button variant="outline" className="w-full" onClick={reset}>
