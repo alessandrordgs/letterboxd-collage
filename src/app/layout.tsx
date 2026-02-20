@@ -1,13 +1,14 @@
 
 import type { Metadata } from "next";
-import { Roboto } from "next/font/google";
+import { Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 
-const roboto = Roboto({
-  variable: "--font-roboto",
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-space-grotesk",
   subsets: ["latin"],
-  display: 'swap'
+  display: 'swap',
+  weight: ["400", "500", "600", "700"],
 });
 
 
@@ -53,13 +54,12 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      className={`${roboto.variable}  antialiased`}
+      className={`${spaceGrotesk.variable} antialiased`}
       lang="pt-br"
       prefix="og: http://ogp.me/ns#"
     >
       <body
-        className={`${roboto.variable}antialiased`}
-
+        className={`${spaceGrotesk.variable} antialiased`}
       >
         <Providers>
           {children}

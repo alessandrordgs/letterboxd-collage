@@ -5,10 +5,11 @@ import { ProgressCircle } from "@/components/ui/CircularProgressIndicator";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectTrigger, SelectValue, SelectItem } from "@/components/ui/select";
+import { Logo } from "@/components/ui/Logo";
 import { Imovies } from "@/interfaces/IMovies";
 import { calculateGridColumns } from "@/lib/utils";
 import axios from "axios";
-import { signIn, signOut, useSession } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 
 import NextImage from "next/image";
 import { useRouter } from "next/navigation";
@@ -26,6 +27,7 @@ export default function Home() {
   const [media, setMedia] = useState<File | null>(null)
   const session = useSession()
   const router = useRouter()
+
   async function getDiary() {
     if (!username) return alert('preencha o campo de úsuario')
     setIsLoading(true)
@@ -69,6 +71,7 @@ export default function Home() {
       }
     };
   }, []);
+
   useEffect(() => {
     if (!movies.length) return;
 
@@ -77,17 +80,24 @@ export default function Home() {
 
     const ctx = canvas.getContext("2d");
     const columns = calculateGridColumns(movies);
-    const padding = 0; // Se quiser espaço entre imagens
+    const padding = 0;
 
-    Promise.all(
+    Promise.allSettled(
       movies.map((movie) => {
-        return new Promise<HTMLImageElement>((resolve) => {
+        return new Promise<HTMLImageElement>((resolve, reject) => {
           const img = new Image();
           img.src = movie.img as string;
           img.onload = () => resolve(img);
+          img.onerror = () => reject(new Error(`Failed to load image: ${movie.img}`));
         });
       })
-    ).then((images) => {
+    ).then((results) => {
+      const images = results
+        .filter((r): r is PromiseFulfilledResult<HTMLImageElement> => r.status === 'fulfilled')
+        .map(r => r.value)
+        .filter(img => img.width > 0 && img.height > 0);
+
+      if (!images.length) return;
       const imageWidths: number[] = [];
       const rowHeights: number[] = [];
 
@@ -113,20 +123,24 @@ export default function Home() {
         }
       });
 
-
       const totalWidth = imageWidths.reduce((sum, w) => sum + w + padding, 0);
       const totalHeight = rowHeights.reduce((sum, h) => sum + h + padding, 0);
 
       canvas.width = totalWidth;
       canvas.height = totalHeight;
 
+      // Center last row when it has fewer images than columns
+      const lastRowCount = images.length % columns || columns;
+      const lastRowStartIndex = images.length - lastRowCount;
+      const lastRowWidth = imageWidths.slice(0, lastRowCount).reduce((sum, w) => sum + w + padding, 0);
+      const lastRowOffset = Math.floor((totalWidth - lastRowWidth) / 2);
 
-      let x = 0;
+      let x = lastRowStartIndex === 0 ? lastRowOffset : 0;
       let y = 0;
       let col = 0;
       let row = 0;
 
-      images.forEach((img) => {
+      images.forEach((img, i) => {
         ctx?.drawImage(img, x, y, img.width, img.height);
 
         x += imageWidths[col] + padding;
@@ -134,9 +148,9 @@ export default function Home() {
 
         if (col === columns) {
           col = 0;
-          x = 0;
-          y += rowHeights[row] + padding;
           row++;
+          y += rowHeights[row - 1] + padding;
+          x = i + 1 === lastRowStartIndex ? lastRowOffset : 0;
         }
       });
 
@@ -158,78 +172,131 @@ export default function Home() {
     setFinalImage('')
   }
 
-  console.log('session', session) 
-
   async function shareTweet() {
     if (!session.data?.user) {
       return signIn("twitter")
     }
-      const formData = new FormData()
+    const formData = new FormData()
     if (media) formData.append('media', media)
 
-  const response  =  await fetch('/api/twitter/tweet', {
+    const response = await fetch('/api/twitter/tweet', {
       method: 'POST',
       body: formData,
     })
-  const data = await response.json()
-  router.push(`https://x.com/${session.data.user.username}/status/${data.data.data.id}`)
+    const data = await response.json()
+    router.push(`https://x.com/${session.data.user.username}/status/${data.data.data.id}`)
   }
-  return (
-    <div className="flex max-w-3xl h-svh flex-col mx-auto items-center justify-center p-6">
-      <div className="flex flex-col justify-center items-center ">
-        <div className="relative w-[8rem] h-[8rem] mb-4">
-          <NextImage className="mb-4 h-full w-full" objectFit="cover" fill src="https://a.ltrbxd.com/logos/letterboxd-decal-dots-pos-rgb-500px.png" alt="letterboxd logo" />
-        </div>
-        <h1 className="text-center md:text-5xl sm:text-2xl font-bold">Letterboxd collage</h1>
-        <p className="text-center font-light  my-3 md:text-2xl  sm:text-1xl">Make a collage of your Letterboxd movies each month</p>
-      </div>
-      <div>
-        {movies.length === 0 && !isLoading ? <Card className="md:w-[30rem] w-[15rem] md:h-[20rem] h-[15rem] flex items-center justify-center">
-          <CardContent>
 
-            <div className="grid w-full max-w-sm items-center gap-1.5">
-              <Label className="md:text-xl" htmlFor="email">Username</Label>
-              <Input className="md:w-[20rem] w-[10rem] p-4 md:py-6 mb-2 md:text-1xl" onChange={(e) => setUsername(e.target.value)} type="text" id="username" placeholder="alessandrordgs" />
-              <Select onValueChange={(value) => setPeriod(parseInt(value))}>
-                <SelectTrigger className="md:w-[20rem] w-[10rem] p-4 md:py-6 md:text-1xl ">
-                  <SelectValue placeholder="Period" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1 ">1 Month</SelectItem>
-                  <SelectItem value="3 ">3 Months</SelectItem>
-                  <SelectItem value="12 ">12 Months</SelectItem>
-                </SelectContent>
-              </Select>
+  return (
+    <div className="min-h-svh bg-background flex flex-col items-center justify-center px-4 py-10">
+
+      {/* Hero */}
+      <div className="flex flex-col items-center mb-8">
+        <Logo size={84} className="mb-5" />
+
+        <h1 className="text-center text-4xl md:text-6xl font-bold tracking-tight uppercase leading-none">
+          Letterboxd{" "}
+          <span className="text-primary">Collage</span>
+        </h1>
+
+        <p className="text-center text-muted-foreground font-medium mt-3 text-sm md:text-base uppercase tracking-widest">
+          Make a collage of your monthly movies
+        </p>
+      </div>
+
+      {/* Form / Result */}
+      <div className="w-full max-w-sm">
+        {!finalImage && !isLoading && (
+          <Card>
+            <CardContent className="flex flex-col gap-4 pt-2">
+
+              <div className="flex flex-col gap-1.5">
+                <Label
+                  className="text-xs font-bold uppercase tracking-widest text-muted-foreground"
+                  htmlFor="username"
+                >
+                  Username
+                </Label>
+                <Input
+                  onChange={(e) => setUsername(e.target.value)}
+                  value={username}
+                  type="text"
+                  id="username"
+                  placeholder="alessandrordgs"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <Label
+                  className="text-xs font-bold uppercase tracking-widest text-muted-foreground"
+                >
+                  Period
+                </Label>
+                <Select onValueChange={(value) => setPeriod(parseInt(value))}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select period" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">1 Month</SelectItem>
+                    <SelectItem value="3">3 Months</SelectItem>
+                    <SelectItem value="12">12 Months</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Button className="w-full mt-2" onClick={getDiary}>
+                Generate
+              </Button>
+
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Loading */}
+        {(isLoading || (movies.length > 0 && !finalImage)) && (
+          <div className="flex flex-col items-center justify-center mt-8 gap-3">
+            <ProgressCircle
+              value={progress}
+              className="size-24 text-primary"
+              showValue
+            />
+            <p className="text-muted-foreground text-xs uppercase tracking-widest font-medium">
+              {isLoading ? "Fetching your films…" : "Rendering collage…"}
+            </p>
+          </div>
+        )}
+
+        {/* Collage result */}
+        <canvas ref={canvasRef} style={{ display: "none" }} />
+        {finalImage && (
+          <div className="flex flex-col items-center gap-4">
+            <p className="text-muted-foreground text-xs uppercase tracking-widest font-medium">
+              Your collage is ready
+            </p>
+
+            <div className="border border-foreground shadow-[3px_3px_0px_0px_rgba(30,10,60,1)]">
+              <NextImage
+                src={finalImage}
+                alt="Movie collage"
+                height={500}
+                width={500}
+                className="block"
+              />
             </div>
 
-            <Button className="md:w-[20rem] w-[10rem] cursor-pointer mt-3" onClick={getDiary}>Generate</Button>
-          </CardContent>
-        </Card> : <div className="flex flex-col items-center justify-center">
-          <h2 className="text-center font-light   md:text-2xl  sm:text-1xl">Your collage is ready!</h2>
-          <Button className="mt-1" onClick={reset}>
-            Regenerate
-          </Button>
-        </div>}
+            <Button
+              variant="secondary"
+              className="w-full"
+              onClick={shareTweet}
+            >
+              {session.data?.user ? "Share on X" : "Sign in & Share on X"}
+            </Button>
 
-        {isLoading ? <div className="flex items-center justify-center mt-4">
-          <ProgressCircle
-            value={progress}
-            className="size-30 text-blue-500"
-            showValue
-          />
-        </div> : null}
-
-
-        <div className="mt-2 p-4">
-          <canvas ref={canvasRef} style={{ display: "none" }} />
-          {finalImage ? (
-            <NextImage src={finalImage} alt="Combined Grid" height={500} width={500} />
-          ) : (
-            null
-          )}
-        </div>
-        <button onClick={() => signIn("twitter")}>Entrar com Twitter</button>
-        <Button onClick={shareTweet}> share tweet</Button>
+            <Button variant="outline" className="w-full" onClick={reset}>
+              Regenerate
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

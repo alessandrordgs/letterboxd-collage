@@ -1,135 +1,101 @@
 import { Imovies } from "@/interfaces/IMovies"
 import { JSDOM } from "jsdom"
 import { NextRequest } from "next/server"
-type DiaryEntryElement = Element & {
-  querySelector: (selector: string) => Element | null
-}
 
-async function handleFetchRowsLetterboxd(
-  url: string
-): Promise<DiaryEntryElement[]> {
-  const response = await fetch(url, {
-    method: "GET",
-    headers: {
-      "User-Agent":
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
-    },
-  })
-
-  const data = await response.text()
-  const dom = new JSDOM(data)
-  const paginate = dom.window.document?.querySelectorAll(
-    ".paginate-pages > ul li"
-  )
-  const pages: number[] = []
-  paginate?.forEach((item) => {
-    pages.push(parseInt(item.textContent as string))
-  })
-
-  const table = dom.window.document.querySelector("table")
-  const rows = table?.querySelectorAll(".diary-entry-row")
-  const currentRows: DiaryEntryElement[] = rows
-    ? Array.from(rows).map((row) => row as DiaryEntryElement)
-    : []
-  if (pages.length > 0) {
-    let allRows: DiaryEntryElement[] = []
-    pages.shift()
-
-    for (const page of pages) {
-      const rowsOfpage = await handleFetchRowsLetterboxd(`${url}/page/${page}`)
-
-      allRows = [...allRows, ...rowsOfpage]
-    }
-
-    return [...allRows, ...currentRows]
-  }
-  return rows ? currentRows : []
-}
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ username: string }> }
 ) {
   const { username } = await params
-  const period = request?.nextUrl?.searchParams.get("period")
-  const rows = []
-  let url: string = ""
-  if (parseInt(period as string) === 1) {
-    const date = new Date()
-    const month = date.getMonth() + 1
+  const period = parseInt(
+    request?.nextUrl?.searchParams.get("period") as string
+  )
 
-    url = `https://letterboxd.com/${username}/films/diary/for/2025/${month}`
+  const rssUrl = `https://letterboxd.com/${username}/rss/`
 
-    const rowsResponse = await handleFetchRowsLetterboxd(url)
-    rows.push(...rowsResponse)
-  }
-
-  if (parseInt(period as string) === 3) {
-    const date = new Date()
-    const currentMonth = date.getMonth() + 1
-    const year = date.getFullYear()
-
-    for (let i = 0; i < 3; i++) {
-      let targetMonth = currentMonth - i
-      let targetYear = year
-
-      if (targetMonth <= 0) {
-        targetMonth = 12 + targetMonth
-        targetYear--
-      }
-
-      console.log(`Buscando dados de ${targetMonth}/${targetYear}`)
-      url = `https://letterboxd.com/${username}/films/diary/for/${targetYear}/${targetMonth}`
-
-      const rowsResponse = await handleFetchRowsLetterboxd(url)
-      rows.push(...rowsResponse)
+  let xmlText: string
+  try {
+    const response = await fetch(rssUrl, {
+      method: "GET",
+      headers: {
+        "User-Agent": "RSS Reader/1.0",
+        Accept: "application/rss+xml, application/xml, text/xml, */*",
+      },
+    })
+    if (!response.ok) {
+      console.error(`RSS fetch failed: ${response.status}`)
+      return Response.json([], { status: 200 })
     }
+    xmlText = await response.text()
+  } catch (err) {
+    console.error("RSS fetch error:", err)
+    return Response.json([], { status: 200 })
   }
-  if (parseInt(period as string) === 12) {
-    url = `https://letterboxd.com/${username}/films/diary/for/2025/`
 
-    const rowsResponse = await handleFetchRowsLetterboxd(url)
-    rows.push(...rowsResponse)
-  }
+  const dom = new JSDOM(xmlText, { contentType: "text/xml" })
+  const doc = dom.window.document
+  const items = Array.from(doc.getElementsByTagName("item"))
+  console.log(`RSS items found: ${items.length}`)
+
+  const now = new Date()
+  const currentYear = now.getFullYear()
+  const currentMonth = now.getMonth() + 1
 
   const films: Imovies[] = []
 
-  for (const row of rows ?? []) {
-    const details = row.querySelector(".td-film-details")
-    const name = details?.querySelector("h3 > a")?.textContent
-    const film = details
-      ?.querySelector("h3 > a")
-      ?.getAttribute("href")
-      ?.split("/film")[1]
-      ?.replace("/1", "")
+  for (const item of items) {
+    // Get watched date — letterboxd:watchedDate or pubDate fallback
+    const watchedDateText =
+      item.getElementsByTagName("letterboxd:watchedDate")[0]?.textContent ||
+      item.getElementsByTagName("watchedDate")[0]?.textContent ||
+      item.getElementsByTagName("pubDate")[0]?.textContent
 
-    const filmResponse = await fetch(`https://letterboxd.com/film/${film}`, {
-      method: "GET",
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
-      },
-    })
+    if (!watchedDateText) continue
 
-    const dataFilm = await filmResponse.text()
-    const domFilm = new JSDOM(dataFilm)
-    const scripts = domFilm.window.document.querySelectorAll(
-      'script[type="application/ld+json"]'
-    )
-    const data = JSON.parse(
-      scripts[0]?.textContent?.split(" */")[1].split("/* ]]>")[0] as string
-    )
+    const watchedDate = new Date(watchedDateText)
+    const watchedYear = watchedDate.getFullYear()
+    const watchedMonth = watchedDate.getMonth() + 1
 
-    films.push({
-      name,
-      img: `/api/letterboxd/proxy-image?url=${encodeURIComponent(data.image)}`,
-    })
+    // Filter by period
+    if (period === 1) {
+      if (watchedYear !== currentYear || watchedMonth !== currentMonth) continue
+    } else if (period === 3) {
+      const cutoff = new Date(now)
+      cutoff.setMonth(cutoff.getMonth() - 3)
+      if (watchedDate < cutoff) continue
+    } else if (period === 12) {
+      if (watchedYear !== currentYear) continue
+    }
+
+    // Get film title
+    const filmTitleEl =
+      item.getElementsByTagName("letterboxd:filmTitle")[0] ||
+      item.getElementsByTagName("filmTitle")[0]
+    const name =
+      filmTitleEl?.textContent ||
+      item.getElementsByTagName("title")[0]?.textContent ||
+      undefined
+
+    // Get poster image from description CDATA
+    const descriptionEl = item.getElementsByTagName("description")[0]
+    const descText = descriptionEl?.textContent || ""
+    const imgMatch = descText.match(/<img[^>]+src="([^"]+)"/)
+    const imageUrl = imgMatch?.[1]
+
+    if (imageUrl && name) {
+      films.push({
+        name,
+        img: `/api/letterboxd/proxy-image?url=${encodeURIComponent(imageUrl)}`,
+      })
+    }
   }
+
+  console.log(`Films extracted for period ${period}: ${films.length}`)
 
   return Response.json(films, {
     status: 200,
     headers: {
       "Content-Type": "application/json",
-      "Content-Length": Buffer.byteLength(JSON.stringify(films)).toString(),
     },
   })
 }

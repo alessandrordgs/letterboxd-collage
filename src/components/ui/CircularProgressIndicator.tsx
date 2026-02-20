@@ -57,7 +57,7 @@ export const ProgressCircle = ({
       aria-valuemax={100}
       {...restSvgProps}
     >
-      <circle {...commonParams} className="stroke-muted-foreground/30" />
+      <circle {...commonParams} stroke="#DDD6FE" />
       <circle
         {...commonParams}
         stroke="currentColor"
