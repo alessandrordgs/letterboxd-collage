@@ -18,11 +18,13 @@ export default function Home() {
   const [username, setUsername] = useState('')
   const [period, setPeriod] = useState(1)
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const finalImageUrlRef = useRef<string | null>(null);
   const [finalImage, setFinalImage] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
+  const [isGeneratingStories, setIsGeneratingStories] = useState(false);
 
   useEffect(() => {
     if (!contextMenu) return;
@@ -256,13 +258,22 @@ export default function Home() {
       ctx.letterSpacing = `${Math.round(totalWidth * 0.002)}px`;
       ctx.fillText('collage.alessandrordgs.com.br', cx, footerY + FOOTER_HEIGHT * 0.65);
 
-      const dataUrl = canvas.toDataURL("image/png");
-      setProgress(100);
-      setFinalImage(dataUrl);
+      canvas.toBlob((blob) => {
+        if (!blob) return;
+        if (finalImageUrlRef.current) URL.revokeObjectURL(finalImageUrlRef.current);
+        const url = URL.createObjectURL(blob);
+        finalImageUrlRef.current = url;
+        setProgress(100);
+        setFinalImage(url);
+      }, 'image/png');
     });
   }, [movies, period]);
 
   function reset() {
+    if (finalImageUrlRef.current) {
+      URL.revokeObjectURL(finalImageUrlRef.current);
+      finalImageUrlRef.current = null;
+    }
     setUsername('')
     setPeriod(1)
     setMovies([])
@@ -279,8 +290,11 @@ export default function Home() {
   }
 
   function downloadStoriesCollage() {
-    if (!finalImage) return;
+    if (!finalImage || isGeneratingStories) return;
+    setIsGeneratingStories(true);
+
     const img = new Image();
+    img.onerror = () => setIsGeneratingStories(false);
     img.onload = () => {
       const SW = img.width;
       const SH = Math.round(SW * 16 / 9);
@@ -289,12 +303,11 @@ export default function Home() {
       sc.width = SW;
       sc.height = SH;
       const sctx = sc.getContext('2d');
-      if (!sctx) return;
+      if (!sctx) { setIsGeneratingStories(false); return; }
 
       sctx.fillStyle = '#14181C';
       sctx.fillRect(0, 0, SW, SH);
 
-      // Scale collage to fit height if needed
       let drawW = img.width;
       let drawH = img.height;
       if (drawH > SH) {
@@ -307,7 +320,6 @@ export default function Home() {
       const oy = Math.round((SH - drawH) / 2);
       sctx.drawImage(img, ox, oy, drawW, drawH);
 
-      // Add URL label in bottom padding if space is available
       if (oy > 24) {
         const labelSize = Math.max(12, Math.round(SW * 0.022));
         sctx.font = `500 ${labelSize}px 'Space Grotesk', sans-serif`;
@@ -318,10 +330,16 @@ export default function Home() {
         sctx.fillText('collage.alessandrordgs.com.br', SW / 2, oy + drawH + oy / 2);
       }
 
-      const a = document.createElement('a');
-      a.href = sc.toDataURL('image/png');
-      a.download = 'my-letterboxd-diary-stories.png';
-      a.click();
+      sc.toBlob((blob) => {
+        setIsGeneratingStories(false);
+        if (!blob) return;
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'my-letterboxd-diary-stories.png';
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }, 'image/png');
     };
     img.src = finalImage;
   }
@@ -432,6 +450,7 @@ export default function Home() {
                 alt="Movie collage"
                 height={500}
                 width={500}
+                unoptimized
                 style={{ width: '100%', height: 'auto' }}
                 className="block select-none"
               />
@@ -458,10 +477,11 @@ export default function Home() {
                 </button>
                 <div className="h-px bg-border mx-2" />
                 <button
-                  className="w-full text-left px-4 py-2.5 text-xs font-bold uppercase tracking-widest text-foreground hover:bg-primary hover:text-primary-foreground transition-colors"
+                  className="w-full text-left px-4 py-2.5 text-xs font-bold uppercase tracking-widest text-foreground hover:bg-primary hover:text-primary-foreground transition-colors disabled:opacity-40 disabled:pointer-events-none"
+                  disabled={isGeneratingStories}
                   onClick={() => { downloadStoriesCollage(); setContextMenu(null); }}
                 >
-                  ↕ Download for Stories
+                  {isGeneratingStories ? '… Generating…' : '↕ Download for Stories'}
                 </button>
               </div>
             )}
@@ -478,8 +498,9 @@ export default function Home() {
               variant="secondary"
               className="w-full"
               onClick={downloadStoriesCollage}
+              disabled={isGeneratingStories}
             >
-              Download for Stories
+              {isGeneratingStories ? 'Generating…' : 'Download for Stories'}
             </Button>
 
             <Button variant="outline" className="w-full" onClick={reset}>
