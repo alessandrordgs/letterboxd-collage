@@ -30,11 +30,12 @@ export async function POST(request: Request) {
       console.log(uploadRes.data)
       mediaId = uploadRes.data.id
     }
+    const twitterUsername = session.user?.username as string | undefined
     const tweetPayload: {
       text: string
       media?: { media_ids: string[] }
     } = {
-      text: `Collage created using https://colagge.alessandrordgs.com.br based on diary of alessandrordgs`,
+      text: `Collage created using https://colagge.alessandrordgs.com.br based on diary of ${twitterUsername ?? "letterboxd"}`,
     }
     if (mediaId) {
       tweetPayload.media = { media_ids: [mediaId] }
