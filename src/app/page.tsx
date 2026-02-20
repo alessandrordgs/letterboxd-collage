@@ -21,6 +21,7 @@ export default function Home() {
   const [finalImage, setFinalImage] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
@@ -64,15 +65,24 @@ export default function Home() {
         setProgress(currentProgressValue);
       }
     }, 300);
+    setError(null)
     try {
       const response = await axios.get(`/api/letterboxd/diary/${username}?period=${period}`)
       const data = response.data
-      setProgress(100)
-      setMovies(data)
+      if (data.length === 0) {
+        setError('No films found for this period.')
+      } else {
+        setProgress(100)
+        setMovies(data)
+      }
       setIsLoading(false)
-    } catch (error) {
+    } catch (err) {
       setProgress(0);
-      console.error('Erro ao buscar dados:', error);
+      if (axios.isAxiosError(err) && err.response?.status === 404) {
+        setError(`User "${username}" not found on Letterboxd.`)
+      } else {
+        setError('Something went wrong. Please try again.')
+      }
     } finally {
       if (timerRef.current) {
         clearInterval(timerRef.current);
@@ -257,6 +267,7 @@ export default function Home() {
     setPeriod(1)
     setMovies([])
     setFinalImage('')
+    setError(null)
   }
 
   function downloadCollage() {
@@ -286,6 +297,13 @@ export default function Home() {
 
       {/* Form / Result */}
       <div className="w-full max-w-sm">
+        {error && !isLoading && (
+          <div className="border border-foreground bg-card px-4 py-3 mb-4 flex flex-col gap-1">
+            <p className="text-xs font-bold uppercase tracking-widest text-destructive">Error</p>
+            <p className="text-sm text-muted-foreground">{error}</p>
+          </div>
+        )}
+
         {!finalImage && !isLoading && (
           <Card>
             <CardContent className="flex flex-col gap-4 pt-2">
