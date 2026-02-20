@@ -23,17 +23,17 @@ export default function Image() {
         {/* Logo */}
         <svg width="140" height="140" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
           <rect x="4" y="4" width="72" height="72" fill="#1E0A3C" />
-          <rect x="0" y="0" width="72" height="72" fill="#EEE6FF" stroke="#1E0A3C" stroke-width="2" />
-          <line x1="0" y1="24" x2="72" y2="24" stroke="#1E0A3C" stroke-width="0.75" opacity="0.12" />
-          <line x1="0" y1="48" x2="72" y2="48" stroke="#1E0A3C" stroke-width="0.75" opacity="0.12" />
-          <line x1="24" y1="0" x2="24" y2="72" stroke="#1E0A3C" stroke-width="0.75" opacity="0.12" />
-          <line x1="48" y1="0" x2="48" y2="72" stroke="#1E0A3C" stroke-width="0.75" opacity="0.12" />
+          <rect x="0" y="0" width="72" height="72" fill="#EEE6FF" stroke="#1E0A3C" strokeWidth="2" />
+          <line x1="0" y1="24" x2="72" y2="24" stroke="#1E0A3C" strokeWidth="0.75" opacity="0.12" />
+          <line x1="0" y1="48" x2="72" y2="48" stroke="#1E0A3C" strokeWidth="0.75" opacity="0.12" />
+          <line x1="24" y1="0" x2="24" y2="72" stroke="#1E0A3C" strokeWidth="0.75" opacity="0.12" />
+          <line x1="48" y1="0" x2="48" y2="72" stroke="#1E0A3C" strokeWidth="0.75" opacity="0.12" />
           <circle cx="18" cy="38" r="11" fill="#1E0A3C" />
-          <circle cx="16" cy="36" r="11" fill="#F16121" stroke="#1E0A3C" stroke-width="1.5" />
+          <circle cx="16" cy="36" r="11" fill="#F16121" stroke="#1E0A3C" strokeWidth="1.5" />
           <circle cx="38" cy="38" r="11" fill="#1E0A3C" />
-          <circle cx="36" cy="36" r="11" fill="#00E054" stroke="#1E0A3C" stroke-width="1.5" />
+          <circle cx="36" cy="36" r="11" fill="#00E054" stroke="#1E0A3C" strokeWidth="1.5" />
           <circle cx="58" cy="38" r="11" fill="#1E0A3C" />
-          <circle cx="56" cy="36" r="11" fill="#40BCF4" stroke="#1E0A3C" stroke-width="1.5" />
+          <circle cx="56" cy="36" r="11" fill="#40BCF4" stroke="#1E0A3C" strokeWidth="1.5" />
         </svg>
 
         {/* Title */}
@@ -53,9 +53,11 @@ export default function Image() {
               letterSpacing: '-1px',
               lineHeight: 1,
               textTransform: 'uppercase',
+              display: 'flex',
+              gap: 16,
             }}
           >
-            LETTERBOXD{' '}
+            <span>LETTERBOXD</span>
             <span style={{ color: '#00E054' }}>COLLAGE</span>
           </div>
           <div
