@@ -1,0 +1,23 @@
+<svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Neobrutalist offset shadow -->
+  <rect x="4" y="4" width="72" height="72" fill="#1E0A3C" />
+  <!-- Main card background -->
+  <rect x="0" y="0" width="72" height="72" fill="#EEE6FF" stroke="#1E0A3C" stroke-width="2" />
+  <!-- Subtle collage grid lines -->
+  <line x1="0" y1="24" x2="72" y2="24" stroke="#1E0A3C" stroke-width="0.75" opacity="0.12" />
+  <line x1="0" y1="48" x2="72" y2="48" stroke="#1E0A3C" stroke-width="0.75" opacity="0.12" />
+  <line x1="24" y1="0" x2="24" y2="72" stroke="#1E0A3C" stroke-width="0.75" opacity="0.12" />
+  <line x1="48" y1="0" x2="48" y2="72" stroke="#1E0A3C" stroke-width="0.75" opacity="0.12" />
+  <!-- Orange dot shadow -->
+  <circle cx="18" cy="38" r="11" fill="#1E0A3C" />
+  <!-- Orange dot -->
+  <circle cx="16" cy="36" r="11" fill="#F16121" stroke="#1E0A3C" stroke-width="1.5" />
+  <!-- Green dot shadow -->
+  <circle cx="38" cy="38" r="11" fill="#1E0A3C" />
+  <!-- Green dot -->
+  <circle cx="36" cy="36" r="11" fill="#00E054" stroke="#1E0A3C" stroke-width="1.5" />
+  <!-- Blue dot shadow -->
+  <circle cx="58" cy="38" r="11" fill="#1E0A3C" />
+  <!-- Blue dot -->
+  <circle cx="56" cy="36" r="11" fill="#40BCF4" stroke="#1E0A3C" stroke-width="1.5" />
+</svg>
