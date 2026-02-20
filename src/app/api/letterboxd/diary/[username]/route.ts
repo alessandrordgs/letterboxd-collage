@@ -67,7 +67,9 @@ export async function GET(
       cutoff.setMonth(cutoff.getMonth() - 3)
       if (watchedDate < cutoff) continue
     } else if (period === 12) {
-      if (watchedYear !== currentYear) continue
+      const cutoff = new Date(now)
+      cutoff.setMonth(cutoff.getMonth() - 12)
+      if (watchedDate < cutoff) continue
     }
 
     // Get film title

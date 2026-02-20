@@ -191,7 +191,7 @@ export default function Home() {
         ? now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase()
         : period === 3
           ? 'LAST 3 MONTHS'
-          : String(now.getFullYear());
+          : 'LAST 12 MONTHS';
       const subtitleSize = Math.max(10, Math.round(totalWidth * 0.022));
       ctx.font = `600 ${subtitleSize}px 'Space Grotesk', sans-serif`;
       ctx.fillStyle = '#FF8000';
