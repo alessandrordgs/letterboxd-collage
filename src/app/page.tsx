@@ -72,7 +72,6 @@ export default function Home() {
       if (data.length === 0) {
         setError('No films found for this period.')
       } else {
-        setProgress(100)
         setMovies(data)
       }
       setIsLoading(false)
@@ -258,6 +257,7 @@ export default function Home() {
       ctx.fillText('collage.alessandrordgs.com.br', cx, footerY + FOOTER_HEIGHT * 0.65);
 
       const dataUrl = canvas.toDataURL("image/png");
+      setProgress(100);
       setFinalImage(dataUrl);
     });
   }, [movies, period]);
