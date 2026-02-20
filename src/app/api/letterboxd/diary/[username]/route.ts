@@ -22,14 +22,17 @@ export async function GET(
         Accept: "application/rss+xml, application/xml, text/xml, */*",
       },
     })
+    if (response.status === 404) {
+      return Response.json({ error: "user_not_found" }, { status: 404 })
+    }
     if (!response.ok) {
       console.error(`RSS fetch failed: ${response.status}`)
-      return Response.json([], { status: 200 })
+      return Response.json({ error: "fetch_failed" }, { status: 502 })
     }
     xmlText = await response.text()
   } catch (err) {
     console.error("RSS fetch error:", err)
-    return Response.json([], { status: 200 })
+    return Response.json({ error: "fetch_failed" }, { status: 502 })
   }
 
   const dom = new JSDOM(xmlText, { contentType: "text/xml" })
