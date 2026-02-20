@@ -278,6 +278,54 @@ export default function Home() {
     a.click()
   }
 
+  function downloadStoriesCollage() {
+    if (!finalImage) return;
+    const img = new Image();
+    img.onload = () => {
+      const SW = img.width;
+      const SH = Math.round(SW * 16 / 9);
+
+      const sc = document.createElement('canvas');
+      sc.width = SW;
+      sc.height = SH;
+      const sctx = sc.getContext('2d');
+      if (!sctx) return;
+
+      sctx.fillStyle = '#14181C';
+      sctx.fillRect(0, 0, SW, SH);
+
+      // Scale collage to fit height if needed
+      let drawW = img.width;
+      let drawH = img.height;
+      if (drawH > SH) {
+        const scale = SH / drawH;
+        drawW = Math.round(drawW * scale);
+        drawH = SH;
+      }
+
+      const ox = Math.round((SW - drawW) / 2);
+      const oy = Math.round((SH - drawH) / 2);
+      sctx.drawImage(img, ox, oy, drawW, drawH);
+
+      // Add URL label in bottom padding if space is available
+      if (oy > 24) {
+        const labelSize = Math.max(12, Math.round(SW * 0.022));
+        sctx.font = `500 ${labelSize}px 'Space Grotesk', sans-serif`;
+        sctx.fillStyle = '#89A398';
+        sctx.textAlign = 'center';
+        sctx.textBaseline = 'middle';
+        sctx.letterSpacing = `${Math.round(SW * 0.002)}px`;
+        sctx.fillText('collage.alessandrordgs.com.br', SW / 2, oy + drawH + oy / 2);
+      }
+
+      const a = document.createElement('a');
+      a.href = sc.toDataURL('image/png');
+      a.download = 'my-letterboxd-diary-stories.png';
+      a.click();
+    };
+    img.src = finalImage;
+  }
+
   return (
     <div className="min-h-svh bg-background flex flex-col items-center justify-center px-4 py-10">
 
@@ -408,6 +456,13 @@ export default function Home() {
                 >
                   ⎘ Copy to Clipboard
                 </button>
+                <div className="h-px bg-border mx-2" />
+                <button
+                  className="w-full text-left px-4 py-2.5 text-xs font-bold uppercase tracking-widest text-foreground hover:bg-primary hover:text-primary-foreground transition-colors"
+                  onClick={() => { downloadStoriesCollage(); setContextMenu(null); }}
+                >
+                  ↕ Download for Stories
+                </button>
               </div>
             )}
 
@@ -417,6 +472,14 @@ export default function Home() {
               onClick={downloadCollage}
             >
               Download
+            </Button>
+
+            <Button
+              variant="secondary"
+              className="w-full"
+              onClick={downloadStoriesCollage}
+            >
+              Download for Stories
             </Button>
 
             <Button variant="outline" className="w-full" onClick={reset}>
