@@ -164,29 +164,24 @@ export default function Home() {
 
       if (!ctx) return;
 
-      // Background
       ctx.fillStyle = '#14181C';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // --- HEADER ---
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
 
-      // Brand label "● LETTERBOXD"
       const labelSize = Math.max(10, Math.round(totalWidth * 0.018));
       ctx.font = `500 ${labelSize}px 'Space Grotesk', sans-serif`;
       ctx.fillStyle = '#00E054';
       ctx.letterSpacing = `${Math.round(totalWidth * 0.004)}px`;
       ctx.fillText('● LETTERBOXD', cx, HEADER_HEIGHT * 0.28);
 
-      // Title "THIS IS MY DIARY"
       const titleSize = Math.max(18, Math.round(totalWidth * 0.055));
       ctx.font = `700 ${titleSize}px 'Space Grotesk', sans-serif`;
       ctx.fillStyle = '#FFFFFF';
       ctx.letterSpacing = `${Math.round(totalWidth * 0.002)}px`;
       ctx.fillText('THIS IS MY DIARY', cx, HEADER_HEIGHT * 0.58);
 
-      // Period subtitle
       const now = new Date();
       const periodLabel = period === 1
         ? now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase()
@@ -199,11 +194,8 @@ export default function Home() {
       ctx.letterSpacing = `${Math.round(totalWidth * 0.003)}px`;
       ctx.fillText(periodLabel, cx, HEADER_HEIGHT * 0.84);
 
-      // Reset letterSpacing for images
       ctx.letterSpacing = '0px';
 
-      // --- GRID (offset by HEADER_HEIGHT) ---
-      // Center last row when it has fewer images than columns
       const lastRowCount = images.length % columns || columns;
       const lastRowStartIndex = images.length - lastRowCount;
       const lastRowWidth = imageWidths.slice(0, lastRowCount).reduce((sum, w) => sum + w + padding, 0);
@@ -228,10 +220,8 @@ export default function Home() {
         }
       });
 
-      // --- FOOTER ---
       const footerY = HEADER_HEIGHT + totalHeight;
 
-      // Separator line
       ctx.strokeStyle = '#2C3440';
       ctx.lineWidth = Math.max(1, Math.round(totalWidth * 0.002));
       ctx.beginPath();
@@ -239,7 +229,6 @@ export default function Home() {
       ctx.lineTo(totalWidth * 0.95, footerY + FOOTER_HEIGHT * 0.22);
       ctx.stroke();
 
-      // Green accent dots flanking the line
       const dotR = Math.max(2, Math.round(totalWidth * 0.004));
       ctx.fillStyle = '#00E054';
       ctx.beginPath();
@@ -249,7 +238,6 @@ export default function Home() {
       ctx.arc(totalWidth * 0.95, footerY + FOOTER_HEIGHT * 0.22, dotR, 0, Math.PI * 2);
       ctx.fill();
 
-      // URL
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       const footerSize = Math.max(12, Math.round(totalWidth * 0.026));
@@ -337,7 +325,6 @@ export default function Home() {
   return (
     <div className="min-h-svh bg-background flex flex-col items-center justify-center px-4 py-10">
 
-      {/* Hero */}
       <div className="flex flex-col items-center mb-8">
         <Logo size={84} className="mb-5" />
 
@@ -351,7 +338,6 @@ export default function Home() {
         </p>
       </div>
 
-      {/* Form / Result */}
       <div className="w-full max-w-sm">
         {error && !isLoading && (
           <div className="border border-foreground bg-card px-4 py-3 mb-4 flex flex-col gap-1">
@@ -406,7 +392,6 @@ export default function Home() {
           </Card>
         )}
 
-        {/* Loading */}
         {(isLoading || (movies.length > 0 && !finalImage)) && (
           <div className="flex flex-col items-center justify-center mt-8 gap-3">
             <ProgressCircle
@@ -420,7 +405,6 @@ export default function Home() {
           </div>
         )}
 
-        {/* Collage result */}
         <canvas ref={canvasRef} style={{ display: "none" }} />
         {finalImage && (
           <div className="flex flex-col items-center gap-4">
