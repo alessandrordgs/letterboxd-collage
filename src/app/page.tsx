@@ -12,6 +12,71 @@ import axios from "axios";
 import NextImage from "next/image";
 import { useEffect, useRef, useState } from "react";
 
+function starPath(ctx: CanvasRenderingContext2D, cx: number, cy: number, outerR: number, innerR: number) {
+  ctx.beginPath();
+  for (let i = 0; i < 10; i++) {
+    const angle = (i * Math.PI) / 5 - Math.PI / 2;
+    const r = i % 2 === 0 ? outerR : innerR;
+    ctx.lineTo(cx + r * Math.cos(angle), cy + r * Math.sin(angle));
+  }
+  ctx.closePath();
+}
+
+function drawStars(
+  ctx: CanvasRenderingContext2D,
+  posterX: number,
+  posterY: number,
+  posterWidth: number,
+  posterHeight: number,
+  rating: number
+) {
+  const starSize = Math.max(8, Math.round(posterWidth * 0.09));
+  const outerR = starSize / 2;
+  const innerR = outerR * 0.4;
+  const gap = Math.round(starSize * 0.15);
+  const totalW = 5 * starSize + 4 * gap;
+  const startX = posterX + (posterWidth - totalW) / 2;
+  const stripH = Math.round(starSize * 1.4);
+  const stripY = posterY + posterHeight - stripH;
+  const centerY = stripY + stripH / 2;
+
+  ctx.save();
+  ctx.fillStyle = 'rgba(20,24,28,0.75)';
+  ctx.fillRect(posterX, stripY, posterWidth, stripH);
+
+  for (let i = 0; i < 5; i++) {
+    const cx = startX + i * (starSize + gap) + outerR;
+    const filled = i + 1 <= rating;
+    const half = !filled && Math.abs(i + 0.5 - rating) < 0.01;
+
+    if (filled) {
+      ctx.fillStyle = '#89A398';
+      starPath(ctx, cx, centerY, outerR, innerR);
+      ctx.fill();
+    } else if (half) {
+      ctx.strokeStyle = '#89A398';
+      ctx.lineWidth = Math.max(1, Math.round(outerR * 0.2));
+      starPath(ctx, cx, centerY, outerR, innerR);
+      ctx.stroke();
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(cx - outerR, centerY - outerR, outerR, outerR * 2);
+      ctx.clip();
+      ctx.fillStyle = '#89A398';
+      starPath(ctx, cx, centerY, outerR, innerR);
+      ctx.fill();
+      ctx.restore();
+    } else {
+      ctx.strokeStyle = '#89A398';
+      ctx.lineWidth = Math.max(1, Math.round(outerR * 0.2));
+      starPath(ctx, cx, centerY, outerR, innerR);
+      ctx.stroke();
+    }
+  }
+
+  ctx.restore();
+}
+
 export default function Home() {
   const [movies, setMovies] = useState<Imovies[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -121,12 +186,16 @@ export default function Home() {
         });
       })
     ).then((results) => {
-      const images = results
-        .filter((r): r is PromiseFulfilledResult<HTMLImageElement> => r.status === 'fulfilled')
-        .map(r => r.value)
-        .filter(img => img.width > 0 && img.height > 0);
+      const pairs = results
+        .map((r, i) => ({
+          img: r.status === 'fulfilled' ? (r as PromiseFulfilledResult<HTMLImageElement>).value : null,
+          movie: movies[i],
+        }))
+        .filter((p): p is { img: HTMLImageElement; movie: Imovies } =>
+          p.img !== null && p.img.width > 0 && p.img.height > 0
+        );
 
-      if (!images.length) return;
+      if (!pairs.length) return;
       const imageWidths: number[] = [];
       const rowHeights: number[] = [];
 
@@ -134,7 +203,7 @@ export default function Home() {
       let currentCol = 0;
       let maxRowHeight = 0;
 
-      images.forEach((img, i) => {
+      pairs.forEach(({ img }, i) => {
         if (!imageWidths[currentCol] || img.width > imageWidths[currentCol]) {
           imageWidths[currentCol] = img.width;
         }
@@ -144,7 +213,7 @@ export default function Home() {
         }
 
         currentCol++;
-        if (currentCol === columns || i === images.length - 1) {
+        if (currentCol === columns || i === pairs.length - 1) {
           rowHeights[currentRow] = maxRowHeight;
           currentRow++;
           currentCol = 0;
@@ -196,8 +265,8 @@ export default function Home() {
 
       ctx.letterSpacing = '0px';
 
-      const lastRowCount = images.length % columns || columns;
-      const lastRowStartIndex = images.length - lastRowCount;
+      const lastRowCount = pairs.length % columns || columns;
+      const lastRowStartIndex = pairs.length - lastRowCount;
       const lastRowWidth = imageWidths.slice(0, lastRowCount).reduce((sum, w) => sum + w + padding, 0);
       const lastRowOffset = Math.floor((totalWidth - lastRowWidth) / 2);
 
@@ -206,8 +275,12 @@ export default function Home() {
       let col = 0;
       let row = 0;
 
-      images.forEach((img, i) => {
+      pairs.forEach(({ img, movie }, i) => {
         ctx.drawImage(img, x, y, img.width, img.height);
+
+        if (movie.rating != null) {
+          drawStars(ctx, x, y, img.width, img.height, movie.rating);
+        }
 
         x += imageWidths[col] + padding;
         col++;

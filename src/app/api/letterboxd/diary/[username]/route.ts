@@ -38,7 +38,6 @@ export async function GET(
   const dom = new JSDOM(xmlText, { contentType: "text/xml" })
   const doc = dom.window.document
   const items = Array.from(doc.getElementsByTagName("item"))
-  console.log(`RSS items found: ${items.length}`)
 
   const now = new Date()
   const currentYear = now.getFullYear()
@@ -47,7 +46,6 @@ export async function GET(
   const films: Imovies[] = []
 
   for (const item of items) {
-    // Get watched date — letterboxd:watchedDate or pubDate fallback
     const watchedDateText =
       item.getElementsByTagName("letterboxd:watchedDate")[0]?.textContent ||
       item.getElementsByTagName("watchedDate")[0]?.textContent ||
@@ -59,7 +57,6 @@ export async function GET(
     const watchedYear = watchedDate.getFullYear()
     const watchedMonth = watchedDate.getMonth() + 1
 
-    // Filter by period
     if (period === 1) {
       if (watchedYear !== currentYear || watchedMonth !== currentMonth) continue
     } else if (period === 3) {
@@ -72,7 +69,6 @@ export async function GET(
       if (watchedDate < cutoff) continue
     }
 
-    // Get film title
     const filmTitleEl =
       item.getElementsByTagName("letterboxd:filmTitle")[0] ||
       item.getElementsByTagName("filmTitle")[0]
@@ -81,21 +77,24 @@ export async function GET(
       item.getElementsByTagName("title")[0]?.textContent ||
       undefined
 
-    // Get poster image from description CDATA
     const descriptionEl = item.getElementsByTagName("description")[0]
     const descText = descriptionEl?.textContent || ""
     const imgMatch = descText.match(/<img[^>]+src="([^"]+)"/)
     const imageUrl = imgMatch?.[1]
 
     if (imageUrl && name) {
+      const ratingText =
+        item.getElementsByTagName("letterboxd:memberRating")[0]?.textContent ||
+        item.getElementsByTagName("memberRating")[0]?.textContent
+      const rating = ratingText ? parseFloat(ratingText) : undefined
+
       films.push({
         name,
         img: `/api/letterboxd/proxy-image?url=${encodeURIComponent(imageUrl)}`,
+        ...(rating != null && !isNaN(rating) ? { rating } : {}),
       })
     }
   }
-
-  console.log(`Films extracted for period ${period}: ${films.length}`)
 
   return Response.json(films, {
     status: 200,
