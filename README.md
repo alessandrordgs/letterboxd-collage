@@ -12,6 +12,7 @@ Enter your Letterboxd username and choose a period (1 month, 3 months, or 12 mon
 
 - Collage generation from Letterboxd RSS (no API key required)
 - Three time periods: last month, last 3 months, last 12 months
+- Star ratings overlaid on each poster (full and half stars)
 - Download as PNG
 - Download formatted for Instagram Stories (9:16)
 - Copy to clipboard via right-click context menu
