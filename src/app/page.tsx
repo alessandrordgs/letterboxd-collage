@@ -1,15 +1,19 @@
 'use client'
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { ProgressCircle } from "@/components/ui/CircularProgressIndicator";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectTrigger, SelectValue, SelectItem } from "@/components/ui/select";
 import { Logo } from "@/components/ui/Logo";
 import { Imovies } from "@/interfaces/IMovies";
+import { IRecommendation } from "@/interfaces/IRecommendation";
 import { calculateGridColumns } from "@/lib/utils";
 import axios from "axios";
+import { ExternalLink } from "lucide-react";
 import NextImage from "next/image";
+import { type CarouselApi } from "@/components/ui/carousel";
 import { useEffect, useRef, useState } from "react";
 
 function starPath(ctx: CanvasRenderingContext2D, cx: number, cy: number, outerR: number, innerR: number) {
@@ -90,6 +94,35 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
   const [isGeneratingStories, setIsGeneratingStories] = useState(false);
+  const [recommendations, setRecommendations] = useState<IRecommendation[]>([]);
+  const [isLoadingRec, setIsLoadingRec] = useState(false);
+  const [recError, setRecError] = useState<string | null>(null);
+  const [recIndex, setRecIndex] = useState(0);
+  const [showRec, setShowRec] = useState(false);
+  const [carouselApi, setCarouselApi] = useState<CarouselApi>();
+  const [recMessage, setRecMessage] = useState(0);
+
+  const recMessages = [
+    'Analyzing your taste…',
+    'Finding hidden gems…',
+    "Checking what you've watched…",
+    'Exploring undiscovered classics…',
+    'Matching directors you love…',
+    'Almost there…',
+  ];
+
+  useEffect(() => {
+    if (!isLoadingRec) { setRecMessage(0); return; }
+    const id = setInterval(() => setRecMessage((i) => (i + 1) % recMessages.length), 2500);
+    return () => clearInterval(id);
+  }, [isLoadingRec]);
+
+  useEffect(() => {
+    if (!carouselApi) return;
+    const onSelect = () => setRecIndex(carouselApi.selectedScrollSnap());
+    carouselApi.on("select", onSelect);
+    return () => { carouselApi.off("select", onSelect); };
+  }, [carouselApi]);
 
   useEffect(() => {
     if (!contextMenu) return;
@@ -340,6 +373,10 @@ export default function Home() {
     setMovies([])
     setFinalImage('')
     setError(null)
+    setRecommendations([])
+    setRecError(null)
+    setShowRec(false)
+    setRecIndex(0)
   }
 
   function downloadCollage() {
@@ -348,6 +385,26 @@ export default function Home() {
     a.href = finalImage
     a.download = 'my-letterboxd-diary.png'
     a.click()
+  }
+
+  async function getRecommendations() {
+    if (!username) return;
+    setIsLoadingRec(true);
+    setRecError(null);
+    setRecommendations([]);
+    try {
+      const diaryRes = await axios.get(`/api/letterboxd/diary/${username}?period=12`);
+      const films = (diaryRes.data as Imovies[])
+        .filter((m) => m.rating != null)
+        .map((m) => ({ title: m.name as string, rating: m.rating as number }));
+      const response = await axios.post('/api/recommendations', { films, username });
+      setRecommendations(response.data.recommendations);
+      setShowRec(true);
+    } catch {
+      setRecError('Could not load recommendations. Please try again.');
+    } finally {
+      setIsLoadingRec(false);
+    }
   }
 
   function downloadStoriesCollage() {
@@ -482,26 +539,99 @@ export default function Home() {
         {finalImage && (
           <div className="flex flex-col items-center gap-4">
             <p className="text-muted-foreground text-xs uppercase tracking-widest font-medium">
-              Your collage is ready
+              {showRec ? 'You might also like' : 'Your collage is ready'}
             </p>
 
-            <div
-              className="border border-foreground shadow-[3px_3px_0px_0px_rgba(30,10,60,1)] w-full relative"
-              onContextMenu={(e) => {
-                e.preventDefault();
-                setContextMenu({ x: e.clientX, y: e.clientY });
-              }}
-            >
-              <NextImage
-                src={finalImage}
-                alt="Movie collage"
-                height={500}
-                width={500}
-                unoptimized
-                style={{ width: '100%', height: 'auto' }}
-                className="block select-none"
-              />
-            </div>
+            {isLoadingRec && (
+              <div className="w-full flex flex-col gap-2">
+                <div className="flex gap-3 border border-foreground bg-card p-3 animate-pulse">
+                  <div className="w-28 flex-none aspect-[2/3] bg-foreground/15" />
+                  <div className="flex flex-col gap-2.5 flex-1 justify-center">
+                    <div className="h-3 bg-foreground/15 w-3/4" />
+                    <div className="h-2.5 bg-foreground/10 w-1/3" />
+                    <div className="h-2.5 bg-foreground/10 w-full" />
+                    <div className="h-2.5 bg-foreground/10 w-full" />
+                    <div className="h-2.5 bg-foreground/10 w-2/3" />
+                  </div>
+                </div>
+                <p className="text-xs text-center text-muted-foreground uppercase tracking-widest transition-all">
+                  {recMessages[recMessage]}
+                </p>
+              </div>
+            )}
+
+            {!showRec && !isLoadingRec && (
+              <div
+                className="border border-foreground shadow-[3px_3px_0px_0px_rgba(30,10,60,1)] w-full relative"
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  setContextMenu({ x: e.clientX, y: e.clientY });
+                }}
+              >
+                <NextImage
+                  src={finalImage}
+                  alt="Movie collage"
+                  height={500}
+                  width={500}
+                  unoptimized
+                  style={{ width: '100%', height: 'auto' }}
+                  className="block select-none"
+                />
+              </div>
+            )}
+
+            {showRec && recommendations.length > 0 && (
+              <Carousel className="w-full" setApi={setCarouselApi}>
+                <CarouselContent>
+                  {recommendations.map((rec, i) => (
+                    <CarouselItem key={i}>
+                      <div className="flex gap-3 border border-foreground bg-card p-3">
+                        <div className="w-28 flex-none aspect-[2/3] overflow-hidden bg-muted">
+                          {rec.posterUrl ? (
+                            <NextImage
+                              src={rec.posterUrl}
+                              alt={rec.title}
+                              width={112}
+                              height={168}
+                              unoptimized
+                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center p-2">
+                              <p className="text-xs text-muted-foreground text-center leading-tight">{rec.title}</p>
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex flex-col gap-2 justify-center min-w-0">
+                          <div className="flex items-start gap-1.5">
+                            <p className="text-sm font-bold text-foreground leading-tight">
+                              {rec.title}
+                            </p>
+                            <a
+                              href={`https://letterboxd.com/search/films/${encodeURIComponent(rec.title)}/`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="mt-0.5 flex-none text-muted-foreground hover:text-primary transition-colors"
+                            >
+                              <ExternalLink size={13} />
+                            </a>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            {rec.year}{rec.director ? ` · ${rec.director}` : ''}
+                          </p>
+                          <p className="text-sm text-muted-foreground leading-relaxed">{rec.explanation}</p>
+                        </div>
+                      </div>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <div className="flex items-center justify-between mt-2">
+                  <CarouselPrevious className="static translate-y-0" />
+                  <p className="text-xs text-muted-foreground">{recIndex + 1} / {recommendations.length}</p>
+                  <CarouselNext className="static translate-y-0" />
+                </div>
+              </Carousel>
+            )}
 
             {contextMenu && (
               <div
@@ -533,26 +663,48 @@ export default function Home() {
               </div>
             )}
 
-            <Button
-              variant="secondary"
-              className="w-full"
-              onClick={downloadCollage}
-            >
-              Download
-            </Button>
+            {!showRec && (
+              <>
+                <Button variant="secondary" className="w-full" onClick={downloadCollage}>
+                  Download
+                </Button>
+                <Button
+                  variant="secondary"
+                  className="w-full"
+                  onClick={downloadStoriesCollage}
+                  disabled={isGeneratingStories}
+                >
+                  {isGeneratingStories ? 'Generating…' : 'Download for Stories'}
+                </Button>
+              </>
+            )}
 
-            <Button
-              variant="secondary"
-              className="w-full"
-              onClick={downloadStoriesCollage}
-              disabled={isGeneratingStories}
-            >
-              {isGeneratingStories ? 'Generating…' : 'Download for Stories'}
-            </Button>
+            {showRec && (
+              <Button variant="secondary" className="w-full" onClick={() => setShowRec(false)}>
+                ← Back to Collage
+              </Button>
+            )}
 
             <Button variant="outline" className="w-full" onClick={reset}>
               Regenerate
             </Button>
+
+            {recError && (
+              <div className="border border-foreground bg-card px-4 py-3 w-full flex flex-col gap-1">
+                <p className="text-xs font-bold uppercase tracking-widest text-destructive">Error</p>
+                <p className="text-sm text-muted-foreground">{recError}</p>
+              </div>
+            )}
+
+            {!showRec && !isLoadingRec && (
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={recommendations.length > 0 ? () => setShowRec(true) : getRecommendations}
+              >
+                {recommendations.length > 0 ? 'View Recommendations' : 'Get Recommendations'}
+              </Button>
+            )}
           </div>
         )}
       </div>
