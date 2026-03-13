@@ -664,19 +664,18 @@ export default function Home() {
             )}
 
             {!showRec && (
-              <>
-                <Button variant="secondary" className="w-full" onClick={downloadCollage}>
-                  Download
+              <div className="grid grid-cols-2 gap-2 w-full">
+                <Button variant="secondary" onClick={downloadCollage}>
+                  ↓ Download
                 </Button>
                 <Button
                   variant="secondary"
-                  className="w-full"
                   onClick={downloadStoriesCollage}
                   disabled={isGeneratingStories}
                 >
-                  {isGeneratingStories ? 'Generating…' : 'Download for Stories'}
+                  {isGeneratingStories ? '…' : '↕ Stories'}
                 </Button>
-              </>
+              </div>
             )}
 
             {showRec && (
@@ -685,10 +684,6 @@ export default function Home() {
               </Button>
             )}
 
-            <Button variant="outline" className="w-full" onClick={reset}>
-              Regenerate
-            </Button>
-
             {recError && (
               <div className="border border-foreground bg-card px-4 py-3 w-full flex flex-col gap-1">
                 <p className="text-xs font-bold uppercase tracking-widest text-destructive">Error</p>
@@ -696,15 +691,19 @@ export default function Home() {
               </div>
             )}
 
-            {!showRec && !isLoadingRec && (
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={recommendations.length > 0 ? () => setShowRec(true) : getRecommendations}
-              >
-                {recommendations.length > 0 ? 'View Recommendations' : 'Get Recommendations'}
+            <div className="grid grid-cols-2 gap-2 w-full">
+              <Button variant="outline" onClick={reset}>
+                Regenerate
               </Button>
-            )}
+              {!showRec && !isLoadingRec && (
+                <Button
+                  variant="outline"
+                  onClick={recommendations.length > 0 ? () => setShowRec(true) : getRecommendations}
+                >
+                  {recommendations.length > 0 ? 'View Recs' : 'Get Recs'}
+                </Button>
+              )}
+            </div>
           </div>
         )}
       </div>
