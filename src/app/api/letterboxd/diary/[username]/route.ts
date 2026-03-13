@@ -59,13 +59,9 @@ export async function GET(
 
     if (period === 1) {
       if (watchedYear !== currentYear || watchedMonth !== currentMonth) continue
-    } else if (period === 3) {
+    } else {
       const cutoff = new Date(now)
-      cutoff.setMonth(cutoff.getMonth() - 3)
-      if (watchedDate < cutoff) continue
-    } else if (period === 12) {
-      const cutoff = new Date(now)
-      cutoff.setMonth(cutoff.getMonth() - 12)
+      cutoff.setMonth(cutoff.getMonth() - period)
       if (watchedDate < cutoff) continue
     }
 
