@@ -12,6 +12,7 @@ import { IRecommendation } from "@/interfaces/IRecommendation";
 import { calculateGridColumns } from "@/lib/utils";
 import axios from "axios";
 import { ExternalLink } from "lucide-react";
+import { Tooltip } from "@/components/ui/tooltip";
 import NextImage from "next/image";
 import { type CarouselApi } from "@/components/ui/carousel";
 import { useEffect, useRef, useState } from "react";
@@ -663,25 +664,24 @@ export default function Home() {
               </div>
             )}
 
-            {!showRec && (
-              <div className="grid grid-cols-2 gap-2 w-full">
-                <Button variant="secondary" onClick={downloadCollage}>
-                  ↓ Download
-                </Button>
+            {!showRec && !isLoadingRec && (
+              <Tooltip content={recommendations.length > 0 ? 'See your personalized film picks' : 'Get AI-powered picks based on your diary'}>
                 <Button
-                  variant="secondary"
-                  onClick={downloadStoriesCollage}
-                  disabled={isGeneratingStories}
+                  className="w-full"
+                  variant="outline"
+                  onClick={recommendations.length > 0 ? () => setShowRec(true) : getRecommendations}
                 >
-                  {isGeneratingStories ? '…' : '↕ Stories'}
+                  {recommendations.length > 0 ? 'View Recommendations' : 'Get Recommendations'}
                 </Button>
-              </div>
+              </Tooltip>
             )}
 
             {showRec && (
-              <Button variant="secondary" className="w-full" onClick={() => setShowRec(false)}>
-                ← Back to Collage
-              </Button>
+              <Tooltip content="Return to your collage">
+                <Button variant="secondary" className="w-full" onClick={() => setShowRec(false)}>
+                  ← Back to Collage
+                </Button>
+              </Tooltip>
             )}
 
             {recError && (
@@ -691,19 +691,37 @@ export default function Home() {
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-2 w-full">
-              <Button variant="outline" onClick={reset}>
-                Regenerate
-              </Button>
-              {!showRec && !isLoadingRec && (
-                <Button
-                  variant="outline"
-                  onClick={recommendations.length > 0 ? () => setShowRec(true) : getRecommendations}
-                >
-                  {recommendations.length > 0 ? 'View Recs' : 'Get Recs'}
+            {!showRec && (
+              <div className="grid grid-cols-3 gap-2 w-full">
+                <Tooltip content="Save collage as PNG">
+                  <Button variant="secondary" onClick={downloadCollage}>
+                    Download
+                  </Button>
+                </Tooltip>
+                <Tooltip content="Download formatted for Instagram Stories (9:16)">
+                  <Button
+                    variant="secondary"
+                    onClick={downloadStoriesCollage}
+                    disabled={isGeneratingStories}
+                  >
+                    {isGeneratingStories ? '…' : 'Stories'}
+                  </Button>
+                </Tooltip>
+                <Tooltip content="Start over with a new username or period">
+                  <Button variant="outline" onClick={reset}>
+                    Regenerate
+                  </Button>
+                </Tooltip>
+              </div>
+            )}
+
+            {showRec && (
+              <Tooltip content="Start over with a new username or period">
+                <Button variant="outline" className="w-full" onClick={reset}>
+                  Regenerate
                 </Button>
-              )}
-            </div>
+              </Tooltip>
+            )}
           </div>
         )}
       </div>
