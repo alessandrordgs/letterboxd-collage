@@ -665,15 +665,22 @@ export default function Home() {
             )}
 
             {!showRec && !isLoadingRec && (
-              <Tooltip content={recommendations.length > 0 ? 'See your personalized film picks' : 'Get picks based on your diary'}>
-                <Button
-                  className="w-full"
-                  variant="outline"
-                  onClick={recommendations.length > 0 ? () => setShowRec(true) : getRecommendations}
-                >
-                  {recommendations.length > 0 ? 'View Recommendations' : 'Get Recommendations'}
-                </Button>
-              </Tooltip>
+              <div className="w-full flex flex-col gap-1.5">
+                <Tooltip content={recommendations.length > 0 ? 'See your personalized film picks' : 'Get picks based on your diary'}>
+                  <Button
+                    className="w-full"
+                    variant="outline"
+                    onClick={recommendations.length > 0 ? () => setShowRec(true) : getRecommendations}
+                  >
+                    {recommendations.length > 0 ? 'View Recommendations' : 'Get Recommendations'}
+                  </Button>
+                </Tooltip>
+                {recommendations.length === 0 && (
+                  <p className="text-center text-xs text-muted-foreground">
+                    Based on your last 12 months of diary
+                  </p>
+                )}
+              </div>
             )}
 
             {showRec && (

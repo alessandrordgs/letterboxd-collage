@@ -84,8 +84,9 @@ async function searchTmdb(title: string): Promise<{ genres: string[]; director: 
   return { genres, director }
 }
 
-async function getMovieDetails(title: string): Promise<{ posterUrl: string | null; director: string | null }> {
-  const res = await tmdbFetch(`/search/movie?query=${encodeURIComponent(title)}`)
+async function getMovieDetails(title: string, year?: number): Promise<{ posterUrl: string | null; director: string | null }> {
+  const yearParam = year ? `&year=${year}` : ''
+  const res = await tmdbFetch(`/search/movie?query=${encodeURIComponent(title)}${yearParam}`)
   if (!res?.ok) return { posterUrl: null, director: null }
 
   const data = await res.json()
@@ -171,7 +172,7 @@ For each recommendation, write 1-2 sentences explaining why it matches their tas
 
   const recommendations: IRecommendation[] = await Promise.all(
     filtered.map(async (rec) => {
-      const { posterUrl, director } = await getMovieDetails(rec.title)
+      const { posterUrl, director } = await getMovieDetails(rec.title, rec.year)
       return { ...rec, posterUrl, director }
     })
   )
