@@ -691,7 +691,7 @@ export default function Home() {
               </div>
             )}
 
-            {!showRec && (
+            {!showRec && !isLoadingRec && (
               <div className="grid grid-cols-3 gap-2 w-full">
                 <Tooltip content="Save collage as PNG">
                   <Button variant="secondary" onClick={downloadCollage}>
@@ -707,18 +707,18 @@ export default function Home() {
                     {isGeneratingStories ? '…' : 'Stories'}
                   </Button>
                 </Tooltip>
-                <Tooltip content="Start over with a new username or period">
+                <Tooltip content="Start a new search">
                   <Button variant="outline" onClick={reset}>
-                    Regenerate
+                    New Search
                   </Button>
                 </Tooltip>
               </div>
             )}
 
             {showRec && (
-              <Tooltip content="Start over with a new username or period">
+              <Tooltip content="Start a new search">
                 <Button variant="outline" className="w-full" onClick={reset}>
-                  Regenerate
+                  New Search
                 </Button>
               </Tooltip>
             )}
