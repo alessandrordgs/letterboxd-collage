@@ -399,7 +399,7 @@ export default function Home() {
   }
 
   async function getRecommendations() {
-    if (!username) return;
+    if (!username) return alert('preencha o campo de úsuario');
     setMode('recommendations');
     setIsLoadingRec(true);
     setRecError(null);
