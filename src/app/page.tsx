@@ -488,78 +488,81 @@ export default function Home() {
         )}
 
         {!finalImage && !isLoading && !(mode === 'recommendations' && (isLoadingRec || recommendations.length > 0)) && (
-          <Card>
-            <div className="flex border-b border-border">
-              {(['collage', 'recommendations'] as const).map((m) => (
-                <button
-                  key={m}
-                  onClick={() => switchMode(m)}
-                  className={cn(
-                    "flex-1 py-2.5 text-xs font-bold uppercase tracking-widest transition-colors",
-                    mode === m
-                      ? "text-foreground border-b-2 border-foreground -mb-px"
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  {m === 'collage' ? 'Collage' : 'Recommend'}
-                </button>
-              ))}
+          <>
+            <div className="flex items-center gap-3 mb-4">
+              <Button
+                className="flex-1"
+                variant={mode === 'collage' ? 'default' : 'outline'}
+                onClick={() => switchMode('collage')}
+              >
+                Collage
+              </Button>
+              <span className="text-xs text-muted-foreground uppercase tracking-widest shrink-0">or</span>
+              <Button
+                className="flex-1"
+                variant={mode === 'recommendations' ? 'default' : 'outline'}
+                onClick={() => switchMode('recommendations')}
+              >
+                Recommend
+              </Button>
             </div>
-            <CardContent className="flex flex-col gap-4 pt-4">
+            <Card>
+              <CardContent className="flex flex-col gap-4 pt-4">
 
-              <div className="flex flex-col gap-1.5">
-                <Label
-                  className="text-xs font-bold uppercase tracking-widest text-muted-foreground"
-                  htmlFor="username"
-                >
-                  Username
-                </Label>
-                <Input
-                  onChange={(e) => setUsername(e.target.value)}
-                  value={username}
-                  type="text"
-                  id="username"
-                  placeholder="alessandrordgs"
-                />
-              </div>
-
-              {mode === 'collage' && (
                 <div className="flex flex-col gap-1.5">
-                  <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                    Period
+                  <Label
+                    className="text-xs font-bold uppercase tracking-widest text-muted-foreground"
+                    htmlFor="username"
+                  >
+                    Username
                   </Label>
-                  <Select onValueChange={(value) => setPeriod(parseInt(value))}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select period" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1">1 Month</SelectItem>
-                      <SelectItem value="3">3 Months</SelectItem>
-                      <SelectItem value="12">12 Months</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Input
+                    onChange={(e) => setUsername(e.target.value)}
+                    value={username}
+                    type="text"
+                    id="username"
+                    placeholder="alessandrordgs"
+                  />
                 </div>
-              )}
 
-              {mode === 'collage' && (
-                <Button className="w-full mt-2" onClick={getDiary}>
-                  Generate
-                </Button>
-              )}
+                {mode === 'collage' && (
+                  <div className="flex flex-col gap-1.5">
+                    <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                      Period
+                    </Label>
+                    <Select onValueChange={(value) => setPeriod(parseInt(value))}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select period" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">1 Month</SelectItem>
+                        <SelectItem value="3">3 Months</SelectItem>
+                        <SelectItem value="12">12 Months</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
 
-              {mode === 'recommendations' && (
-                <div className="flex flex-col gap-1.5">
-                  <Button className="w-full" onClick={getRecommendations} disabled={isLoadingRec}>
-                    Get Recommendations
+                {mode === 'collage' && (
+                  <Button className="w-full mt-2" onClick={getDiary}>
+                    Generate
                   </Button>
-                  <p className="text-center text-xs text-muted-foreground">
-                    Based on your last 12 months of diary
-                  </p>
-                </div>
-              )}
+                )}
 
-            </CardContent>
-          </Card>
+                {mode === 'recommendations' && (
+                  <div className="flex flex-col gap-1.5">
+                    <Button className="w-full" onClick={getRecommendations} disabled={isLoadingRec}>
+                      Get Recommendations
+                    </Button>
+                    <p className="text-center text-xs text-muted-foreground">
+                      Based on your last 12 months of diary
+                    </p>
+                  </div>
+                )}
+
+              </CardContent>
+            </Card>
+          </>
         )}
 
         {mode === 'recommendations' && !finalImage && isLoadingRec && (
