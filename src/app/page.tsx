@@ -665,7 +665,7 @@ export default function Home() {
             )}
 
             {!showRec && !isLoadingRec && (
-              <Tooltip content={recommendations.length > 0 ? 'See your personalized film picks' : 'Get AI-powered picks based on your diary'}>
+              <Tooltip content={recommendations.length > 0 ? 'See your personalized film picks' : 'Get picks based on your diary'}>
                 <Button
                   className="w-full"
                   variant="outline"
