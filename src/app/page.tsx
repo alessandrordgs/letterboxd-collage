@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectTrigger, SelectValue, SelectItem } from "@
 import { Logo } from "@/components/ui/Logo";
 import { Imovies } from "@/interfaces/IMovies";
 import { IRecommendation } from "@/interfaces/IRecommendation";
-import { calculateGridColumns } from "@/lib/utils";
+import { calculateGridColumns, cn } from "@/lib/utils";
 import axios from "axios";
 import { ExternalLink } from "lucide-react";
 import { Tooltip } from "@/components/ui/tooltip";
@@ -102,6 +102,15 @@ export default function Home() {
   const [showRec, setShowRec] = useState(false);
   const [carouselApi, setCarouselApi] = useState<CarouselApi>();
   const [recMessage, setRecMessage] = useState(0);
+  const [mode, setMode] = useState<'collage' | 'recommendations'>('collage');
+
+  function switchMode(next: 'collage' | 'recommendations') {
+    setMode(next);
+    setRecommendations([]);
+    setRecError(null);
+    setShowRec(false);
+    setRecMessage(0);
+  }
 
   const recMessages = [
     'Analyzing your taste…',
@@ -378,6 +387,7 @@ export default function Home() {
     setRecError(null)
     setShowRec(false)
     setRecIndex(0)
+    setMode('collage')
   }
 
   function downloadCollage() {
@@ -477,9 +487,25 @@ export default function Home() {
           </div>
         )}
 
-        {!finalImage && !isLoading && (
+        {!finalImage && !isLoading && !(mode === 'recommendations' && (isLoadingRec || recommendations.length > 0)) && (
           <Card>
-            <CardContent className="flex flex-col gap-4 pt-2">
+            <div className="flex border-b border-border">
+              {(['collage', 'recommendations'] as const).map((m) => (
+                <button
+                  key={m}
+                  onClick={() => switchMode(m)}
+                  className={cn(
+                    "flex-1 py-2.5 text-xs font-bold uppercase tracking-widest transition-colors",
+                    mode === m
+                      ? "text-foreground border-b-2 border-foreground -mb-px"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {m === 'collage' ? 'Collage' : 'Recommend'}
+                </button>
+              ))}
+            </div>
+            <CardContent className="flex flex-col gap-4 pt-4">
 
               <div className="flex flex-col gap-1.5">
                 <Label
@@ -497,30 +523,128 @@ export default function Home() {
                 />
               </div>
 
-              <div className="flex flex-col gap-1.5">
-                <Label
-                  className="text-xs font-bold uppercase tracking-widest text-muted-foreground"
-                >
-                  Period
-                </Label>
-                <Select onValueChange={(value) => setPeriod(parseInt(value))}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select period" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">1 Month</SelectItem>
-                    <SelectItem value="3">3 Months</SelectItem>
-                    <SelectItem value="12">12 Months</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              {mode === 'collage' && (
+                <div className="flex flex-col gap-1.5">
+                  <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                    Period
+                  </Label>
+                  <Select onValueChange={(value) => setPeriod(parseInt(value))}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select period" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">1 Month</SelectItem>
+                      <SelectItem value="3">3 Months</SelectItem>
+                      <SelectItem value="12">12 Months</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
-              <Button className="w-full mt-2" onClick={getDiary}>
-                Generate
-              </Button>
+              {mode === 'collage' && (
+                <Button className="w-full mt-2" onClick={getDiary}>
+                  Generate
+                </Button>
+              )}
+
+              {mode === 'recommendations' && (
+                <div className="flex flex-col gap-1.5">
+                  <Button className="w-full" onClick={getRecommendations} disabled={isLoadingRec}>
+                    Get Recommendations
+                  </Button>
+                  <p className="text-center text-xs text-muted-foreground">
+                    Based on your last 12 months of diary
+                  </p>
+                </div>
+              )}
 
             </CardContent>
           </Card>
+        )}
+
+        {mode === 'recommendations' && !finalImage && isLoadingRec && (
+          <div className="flex flex-col gap-4">
+            <div className="w-full flex flex-col gap-2">
+              <div className="flex gap-3 border border-foreground bg-card p-3 animate-pulse">
+                <div className="w-28 flex-none aspect-[2/3] bg-foreground/15" />
+                <div className="flex flex-col gap-2.5 flex-1 justify-center">
+                  <div className="h-3 bg-foreground/15 w-3/4" />
+                  <div className="h-2.5 bg-foreground/10 w-1/3" />
+                  <div className="h-2.5 bg-foreground/10 w-full" />
+                  <div className="h-2.5 bg-foreground/10 w-full" />
+                  <div className="h-2.5 bg-foreground/10 w-2/3" />
+                </div>
+              </div>
+              <p className="text-xs text-center text-muted-foreground uppercase tracking-widest">
+                {recMessages[recMessage]}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {mode === 'recommendations' && !finalImage && recommendations.length > 0 && (
+          <div className="flex flex-col items-center gap-4">
+            <p className="text-muted-foreground text-xs uppercase tracking-widest font-medium">
+              You might also like
+            </p>
+            <Carousel className="w-full" setApi={setCarouselApi}>
+              <CarouselContent>
+                {recommendations.map((rec, i) => (
+                  <CarouselItem key={i}>
+                    <div className="flex gap-3 border border-foreground bg-card p-3">
+                      <div className="w-28 flex-none aspect-[2/3] overflow-hidden bg-muted">
+                        {rec.posterUrl ? (
+                          <NextImage
+                            src={rec.posterUrl}
+                            alt={rec.title}
+                            width={112}
+                            height={168}
+                            unoptimized
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center p-2">
+                            <p className="text-xs text-muted-foreground text-center leading-tight">{rec.title}</p>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex flex-col gap-2 justify-center min-w-0">
+                        <div className="flex items-start gap-1.5">
+                          <p className="text-sm font-bold text-foreground leading-tight">{rec.title}</p>
+                          <a
+                            href={`https://letterboxd.com/search/films/${encodeURIComponent(rec.title)}/`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-0.5 flex-none text-muted-foreground hover:text-primary transition-colors"
+                          >
+                            <ExternalLink size={13} />
+                          </a>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          {rec.year}{rec.director ? ` · ${rec.director}` : ''}
+                        </p>
+                        <p className="text-sm text-muted-foreground leading-relaxed">{rec.explanation}</p>
+                      </div>
+                    </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <div className="flex items-center justify-between mt-2">
+                <CarouselPrevious className="static translate-y-0" />
+                <p className="text-xs text-muted-foreground">{recIndex + 1} / {recommendations.length}</p>
+                <CarouselNext className="static translate-y-0" />
+              </div>
+            </Carousel>
+            {recError && (
+              <div className="border border-foreground bg-card px-4 py-3 w-full flex flex-col gap-1">
+                <p className="text-xs font-bold uppercase tracking-widest text-destructive">Error</p>
+                <p className="text-sm text-muted-foreground">{recError}</p>
+              </div>
+            )}
+            <Button variant="outline" className="w-full" onClick={() => { setRecommendations([]); setRecError(null); }}>
+              New Search
+            </Button>
+          </div>
         )}
 
         {(isLoading || (movies.length > 0 && !finalImage)) && (
