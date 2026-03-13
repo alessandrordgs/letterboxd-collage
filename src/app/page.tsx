@@ -526,42 +526,28 @@ export default function Home() {
                   </div>
                 )}
 
-                {mode === 'collage' && (
                   <Button className="w-full mt-2" onClick={getDiary}>
                     Generate
                   </Button>
-                )}
 
-                {mode === 'recommendations' && (
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1 h-px bg-border" />
+                    <span className="text-xs text-muted-foreground uppercase tracking-widest shrink-0">or</span>
+                    <div className="flex-1 h-px bg-border" />
+                  </div>
+
                   <div className="flex flex-col gap-1.5">
-                    <Button className="w-full" onClick={getRecommendations} disabled={isLoadingRec}>
+                    <Button className="w-full" variant="outline" onClick={getRecommendations} disabled={isLoadingRec}>
                       Get Recommendations
                     </Button>
                     <p className="text-center text-xs text-muted-foreground">
                       Based on your last 12 months of diary
                     </p>
                   </div>
-                )}
 
               </CardContent>
             </Card>
-            <div className="flex items-center gap-3 mt-4">
-              <Button
-                className="flex-1"
-                variant={mode === 'collage' ? 'default' : 'outline'}
-                onClick={() => switchMode('collage')}
-              >
-                Collage
-              </Button>
-              <span className="text-xs text-muted-foreground uppercase tracking-widest shrink-0">or</span>
-              <Button
-                className="flex-1"
-                variant={mode === 'recommendations' ? 'default' : 'outline'}
-                onClick={() => switchMode('recommendations')}
-              >
-                Recommend
-              </Button>
-            </div>
+           
           </>
         )}
 
