@@ -400,6 +400,7 @@ export default function Home() {
 
   async function getRecommendations() {
     if (!username) return;
+    setMode('recommendations');
     setIsLoadingRec(true);
     setRecError(null);
     setRecommendations([]);
