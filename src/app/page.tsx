@@ -489,23 +489,6 @@ export default function Home() {
 
         {!finalImage && !isLoading && !(mode === 'recommendations' && (isLoadingRec || recommendations.length > 0)) && (
           <>
-            <div className="flex items-center gap-3 mb-4">
-              <Button
-                className="flex-1"
-                variant={mode === 'collage' ? 'default' : 'outline'}
-                onClick={() => switchMode('collage')}
-              >
-                Collage
-              </Button>
-              <span className="text-xs text-muted-foreground uppercase tracking-widest shrink-0">or</span>
-              <Button
-                className="flex-1"
-                variant={mode === 'recommendations' ? 'default' : 'outline'}
-                onClick={() => switchMode('recommendations')}
-              >
-                Recommend
-              </Button>
-            </div>
             <Card>
               <CardContent className="flex flex-col gap-4 pt-4">
 
@@ -562,6 +545,23 @@ export default function Home() {
 
               </CardContent>
             </Card>
+            <div className="flex items-center gap-3 mt-4">
+              <Button
+                className="flex-1"
+                variant={mode === 'collage' ? 'default' : 'outline'}
+                onClick={() => switchMode('collage')}
+              >
+                Collage
+              </Button>
+              <span className="text-xs text-muted-foreground uppercase tracking-widest shrink-0">or</span>
+              <Button
+                className="flex-1"
+                variant={mode === 'recommendations' ? 'default' : 'outline'}
+                onClick={() => switchMode('recommendations')}
+              >
+                Recommend
+              </Button>
+            </div>
           </>
         )}
 
