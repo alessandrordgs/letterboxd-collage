@@ -1,12 +1,14 @@
 # Letterboxd Collage
 
-Generate a visual collage of your Letterboxd diary — movie poster grids for the past month, quarter, or year. Download or save for Instagram Stories.
+Generate a visual collage of your Letterboxd diary — movie poster grids for the past month, quarter, or year. Download or save for Instagram Stories. Get AI-powered film recommendations based on your watch history.
 
 Live at [collage.alessandrordgs.com.br](https://collage.alessandrordgs.com.br).
 
 ## How it works
 
 Enter your Letterboxd username and choose a period (1 month, 3 months, or 12 months). The app fetches your diary via the Letterboxd RSS feed, assembles the film posters into a grid on an HTML canvas, and renders a downloadable image with a header and footer.
+
+Alternatively, use **Get Recommendations** to receive AI-curated film suggestions based on what you've been watching.
 
 ## Features
 
@@ -16,6 +18,7 @@ Enter your Letterboxd username and choose a period (1 month, 3 months, or 12 mon
 - Download as PNG
 - Download formatted for Instagram Stories (9:16)
 - Copy to clipboard via right-click context menu
+- AI film recommendations powered by Google Gemini
 
 ## Stack
 
@@ -23,12 +26,13 @@ Enter your Letterboxd username and choose a period (1 month, 3 months, or 12 mon
 - [Tailwind CSS](https://tailwindcss.com) + [shadcn/ui](https://ui.shadcn.com)
 - HTML Canvas API for image generation
 - JSDOM for RSS parsing
+- Vercel AI SDK + Google Gemini for recommendations
 
 ## Running locally
 
 ```bash
-npm install
-npm run dev
+pnpm install
+pnpm dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
