@@ -40,8 +40,6 @@ export async function GET(
   const items = Array.from(doc.getElementsByTagName("item"))
 
   const now = new Date()
-  const currentYear = now.getFullYear()
-  const currentMonth = now.getMonth() + 1
 
   const films: Imovies[] = []
 
@@ -54,16 +52,9 @@ export async function GET(
     if (!watchedDateText) continue
 
     const watchedDate = new Date(watchedDateText)
-    const watchedYear = watchedDate.getFullYear()
-    const watchedMonth = watchedDate.getMonth() + 1
-
-    if (period === 1) {
-      if (watchedYear !== currentYear || watchedMonth !== currentMonth) continue
-    } else {
-      const cutoff = new Date(now)
-      cutoff.setMonth(cutoff.getMonth() - period)
-      if (watchedDate < cutoff) continue
-    }
+    const cutoff = new Date(now)
+    cutoff.setMonth(cutoff.getMonth() - period)
+    if (watchedDate < cutoff) continue
 
     const filmTitleEl =
       item.getElementsByTagName("letterboxd:filmTitle")[0] ||
