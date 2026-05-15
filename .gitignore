@@ -40,3 +40,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .claude
+.opencode
+
+# playwright mcp testing artifacts
+.playwright-mcp/
+tabs-*.png
