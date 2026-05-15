@@ -141,6 +141,15 @@ export function DiaryProvider({ children }: { children: ReactNode }) {
 
   function switchMode(next: Mode) {
     setMode(next);
+    setMovies([]);
+    if (finalImageUrlRef.current) {
+      URL.revokeObjectURL(finalImageUrlRef.current);
+      finalImageUrlRef.current = null;
+    }
+    setFinalImage(null);
+    setHeatmapData(null);
+    setCollaborativeData(null);
+    setError(null);
     setRecommendations([]);
     setRecError(null);
     setShowRec(false);
@@ -376,7 +385,8 @@ export function DiaryProvider({ children }: { children: ReactNode }) {
   }, [contextMenu]);
 
   useEffect(() => {
-    if (!movies.length) return;
+    if (mode !== 'collage' || !movies.length) return;
+    let cancelled = false;
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     const columns = calculateGridColumns(movies);
@@ -390,6 +400,7 @@ export function DiaryProvider({ children }: { children: ReactNode }) {
         img.onerror = () => reject(new Error(`Failed to load image: ${movie.img}`));
       }))
     ).then((results) => {
+      if (cancelled) return;
       const pairs = results
         .map((r, i) => ({
           img: r.status === 'fulfilled' ? (r as PromiseFulfilledResult<HTMLImageElement>).value : null,
@@ -500,7 +511,7 @@ export function DiaryProvider({ children }: { children: ReactNode }) {
       ctx.fillText('collage.alessandrordgs.com.br', cx, footerY + FOOTER_HEIGHT * 0.65);
 
       canvas.toBlob((blob) => {
-        if (!blob) return;
+        if (cancelled || !blob) return;
         if (finalImageUrlRef.current) URL.revokeObjectURL(finalImageUrlRef.current);
         const url = URL.createObjectURL(blob);
         finalImageUrlRef.current = url;
@@ -508,10 +519,11 @@ export function DiaryProvider({ children }: { children: ReactNode }) {
         setFinalImage(url);
       }, 'image/png');
     });
-  }, [movies, period]);
+    return () => { cancelled = true; };
+  }, [movies, period, mode]);
 
   useEffect(() => {
-    if (heatmapData === null) return;
+    if (mode !== 'heatmap' || heatmapData === null) return;
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
@@ -633,10 +645,11 @@ export function DiaryProvider({ children }: { children: ReactNode }) {
       setProgress(100);
       setFinalImage(url);
     }, 'image/png');
-  }, [heatmapData]);
+  }, [heatmapData, mode, username]);
 
   useEffect(() => {
-    if (!collaborativeData) return;
+    if (mode !== 'collaborative' || !collaborativeData) return;
+    let cancelled = false;
     const { user1, user2, common } = collaborativeData;
     const canvas = document.createElement('canvas');
     const padding = 0;
@@ -654,6 +667,7 @@ export function DiaryProvider({ children }: { children: ReactNode }) {
     }
 
     Promise.all([loadImages(user1), loadImages(user2)]).then(([r1, r2]) => {
+      if (cancelled) return;
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
 
@@ -786,7 +800,7 @@ export function DiaryProvider({ children }: { children: ReactNode }) {
       ctx.fillText('collage.alessandrordgs.com.br', cx, footerY + FOOTER_HEIGHT / 2);
 
       canvas.toBlob((blob) => {
-        if (!blob) return;
+        if (cancelled || !blob) return;
         if (finalImageUrlRef.current) URL.revokeObjectURL(finalImageUrlRef.current);
         const url = URL.createObjectURL(blob);
         finalImageUrlRef.current = url;
@@ -794,7 +808,8 @@ export function DiaryProvider({ children }: { children: ReactNode }) {
         setFinalImage(url);
       }, 'image/png');
     });
-  }, [collaborativeData]);
+    return () => { cancelled = true; };
+  }, [collaborativeData, mode, username, username2]);
 
   const value: DiaryContextValue = {
     movies,
