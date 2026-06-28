@@ -29,6 +29,9 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  verification: {
+    google: "S68efPSW3ExDwin7bjmdxfDQuo3iOld0mHb0PFO4Yn0",
+  },
   twitter: {
     card: "summary_large_image",
     title: "Letterboxd Collage — Create Your Movie Diary",
