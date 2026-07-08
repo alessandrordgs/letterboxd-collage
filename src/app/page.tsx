@@ -62,7 +62,8 @@ function HomeContent() {
   } = useDiary()
 
   return (
-    <div className="min-h-svh bg-background flex flex-col items-center justify-center px-4 py-10">
+    <div className="bg-background flex flex-col items-center px-4 py-10">
+      <div className="min-h-[calc(100svh-5rem)] w-full flex flex-col items-center justify-center">
       <div className="flex flex-col items-center mb-8">
         <Logo size={84} className="mb-5" />
         <h1 className="text-center text-4xl md:text-6xl font-bold tracking-tight uppercase leading-none">
@@ -501,6 +502,67 @@ function HomeContent() {
           </div>
         )}
       </div>
+      </div>
+
+      <section className="w-full max-w-2xl mt-20 flex flex-col gap-10 text-left">
+        <div className="flex flex-col gap-3">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-primary">About</h2>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Letterboxd Collage is a free generator that turns your Letterboxd diary into a
+            movie poster grid. Pick the last month, quarter, or year and it reads your public
+            diary feed, arranges every film you watched into a clean grid with your star
+            ratings overlaid, and lets you download it as a PNG or share it to Instagram
+            Stories. No login and no API key required.
+          </p>
+        </div>
+
+        <div className="flex flex-col gap-3">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-primary">Features</h2>
+          <ul className="flex flex-col gap-2 text-sm text-muted-foreground leading-relaxed">
+            <li><strong className="text-foreground font-semibold">Movie poster grid</strong> built automatically from your Letterboxd diary.</li>
+            <li><strong className="text-foreground font-semibold">Three periods</strong>: last month, last 3 months, or last 12 months.</li>
+            <li><strong className="text-foreground font-semibold">Star ratings</strong> overlaid on each poster, including half stars.</li>
+            <li><strong className="text-foreground font-semibold">Instagram Stories export</strong> in a 9:16 vertical layout.</li>
+            <li><strong className="text-foreground font-semibold">AI recommendations</strong> based on what you have been watching.</li>
+          </ul>
+        </div>
+
+        <div className="flex flex-col gap-4">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-primary">FAQ</h2>
+          <div className="flex flex-col gap-5">
+            <div className="flex flex-col gap-1.5">
+              <h3 className="text-sm font-semibold text-foreground">How do I make a Letterboxd collage?</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Enter your Letterboxd username, pick a period (last month, 3 months, or 12
+                months), and the generator pulls your diary from the public RSS feed and
+                assembles your watched films into a movie poster grid you can download.
+              </p>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <h3 className="text-sm font-semibold text-foreground">Is the Letterboxd collage generator free?</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Yes. It is completely free and needs no login or API key. It reads only your
+                public Letterboxd diary feed.
+              </p>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <h3 className="text-sm font-semibold text-foreground">Can I download my collage for Instagram Stories?</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Yes. You can download the collage as a PNG or export it formatted for Instagram
+                Stories in a 9:16 vertical layout.
+              </p>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <h3 className="text-sm font-semibold text-foreground">What is a Letterboxd grid?</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                A Letterboxd grid is a poster grid of the films you logged over a time period.
+                This tool turns your diary into that grid automatically, with your star ratings
+                overlaid on each poster.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   )
 }
